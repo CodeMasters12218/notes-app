@@ -1,10 +1,27 @@
 import PostItImage from '@/assets/images/post-it.png';
+import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'expo-router';
-import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useEffect } from 'react';
+import { ActivityIndicator, Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 const HomeScreen = () => {
+  const {user, loading} = useAuth();
   const router = useRouter(); 
   
+  useEffect(() => {  
+    if(!loading && user) {
+      router.replace('/notes');
+    }
+  }, [user, loading]);
+
+  if (loading) {
+    return (
+      <View style={styles.centeredContainer}>
+        <ActivityIndicator size='large' color='#007bff'/>
+      </View>
+    )
+  }
+
   return (
     <View
       style={styles.container}>
@@ -61,6 +78,11 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 18,
     fontWeight: "bold",
+  },
+  centeredContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    textAlign: 'center',
   },
 });
 
