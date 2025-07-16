@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import noteService from '@/services/noteService';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 const NoteScreen = () => {
     const router = useRouter();
@@ -14,7 +14,9 @@ const NoteScreen = () => {
     const [modalVisible, setModalVisible] = useState(false); 
     const [newNote, setNewNote] = useState('');  
     const [loading, setLoading] = useState(true);  
-    const [error, setError] = useState(null);  
+    const [error, setError] = useState(null);
+    
+    const [searchText, setSearchText] = useState('');
 
     useEffect(() => { 
         if (!authLoading && !user) {
@@ -106,19 +108,37 @@ const NoteScreen = () => {
         }
     };
 
-    return (<View style={styles.container}>
-        {  loading ? (
-            <ActivityIndicator size="large" color="#007bff" /> 
-        ) : (
-            <>
-                {error && <Text style={styles.errorText}>{error}</Text>}
+    const filteredNotes = notes.filter(note =>
+        note.text.toLowerCase().includes(searchText.toLowerCase())
+    );
 
-                {notes.length === 0 ? (
-                <Text style={styles.noNotesText}>You have no notes</Text>    
-                ) : ( <NoteList notes={notes} onDelete={deleteNote} onEdit={editNote}/>
-)}
-            </>
-        )}
+    return (
+        <View style={styles.container}>
+            { loading ? (
+                <ActivityIndicator size="large" color="#007bff" /> 
+            ) : (
+                <>
+                    {error && <Text style={styles.errorText}>{error}</Text>}
+
+                    <TextInput 
+                        style={styles.searchInput}
+                        placeholder="Search notes..."
+                        value={searchText}
+                        onChangeText={setSearchText}
+                        autoCorrect={false}
+                        autoCapitalize="none"
+                        clearButtonMode="while-editing"
+                    />
+
+                    {notes.length === 0 ? (
+                        <Text style={styles.noNotesText}>You have no notes</Text>
+                    ) : filteredNotes.length === 0 && searchText !== '' ? (
+                        <Text style={styles.noNotesText}>No matching notes found</Text>
+                    ) : (
+                        <NoteList notes={filteredNotes} onDelete={deleteNote} onEdit={editNote} />
+                    )}
+                </>
+            )}
 
         <TouchableOpacity style={styles.addButton} onPress={() => setModalVisible(true)}>
             <Text style={styles.addButtonText}>+ Add Note</Text>
