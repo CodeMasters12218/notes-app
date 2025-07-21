@@ -25,7 +25,7 @@ const noteService = {
         }    
     }, 
     // Add notes   
-    async addNote(user_id, text) {
+    async addNote(user_id, text, tags = []) {
         if (!text) {
             return {error: "Note text cannot be empty"};
         }
@@ -34,11 +34,21 @@ const noteService = {
             text: text,
             createdAt: new Date().toISOString(),
             user_id: user_id,
+            tags: tags,
         }
         const response = await databaseService.createDocument(dbId, colId, data, ID.unique());
 
         if (response?.error) {
             return {error: response.error};
+        }
+
+        const existingTags = await tagService.getTags(user_id);
+        const existingTagNames = existingTags.data.map(tag => tag.name);
+
+        for (const tag of tags) {
+            if (!existingTagNames.includes(tag)) {
+                await tagService.addTag(user_id, tag);
+            }
         }
 
         return {data: response};
