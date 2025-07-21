@@ -17,6 +17,7 @@ const noteService = {
         try {
             const response = await databaseService.listDocuments(dbId, colId, [
             Query.equal('user_id', userId),
+            Query.isNull('deletedAt')
         ]);
         return response;
         } catch (error) {
@@ -76,7 +77,89 @@ const noteService = {
 
         return {success: true};
         
+    },
+
+    // Move to trash
+
+    async moveToTrash(id) {
+        const deletedAt = new Date().toISOString();
+        const response = await databaseService.updateDocument(dbId, colId, id, { deletedAt });
+
+        if (response?.error) {
+            return { error: response.error };
+        }
+
+        return { data: response };
+    },
+
+    async getTrashedNotes(userId) {
+        if (!userId) {
+            return { data: [], error: 'User ID is missing' };
+        }
+
+        try {
+            const response = await databaseService.listDocuments(dbId, colId, [
+                Query.equal('user_id', userId),
+                Query.greaterThan('deletedAt', '1970-01-01T00:00:00Z')
+            ]);
+            return response;
+        } catch (error) {
+            console.log('Error fetching trashed notes:', error.message);
+            return { data: [], error: error.message };
+        }
+    },
+
+    async restoreNote(id) {
+        const response = await databaseService.updateDocument(dbId, colId, id, {deletedAt: null});
+
+        if (response?.error) {
+            return { error: response.error };
+        }
+
+        return { data: response};
+    },
+
+    // Empty trash
+
+    async emptyTrash(userId) {
+        if (!userId) {
+            return { error: 'User ID is missing' };
+        }
+
+        try {
+            // 1. Listar notas en papelera
+            const response = await databaseService.listDocuments(dbId, colId, [
+                Query.equal('user_id', userId),
+                Query.greaterThan('deletedAt', '1970-01-01T00:00:00Z'),
+            ]);
+
+            if (response.error) {
+                return { error: response.error };
+            }
+
+            const trashedNotes = response.data;
+
+            // 2. Borrar cada nota permanentemente
+            const deletePromises = trashedNotes.map(note =>
+                databaseService.deleteDocument(dbId, colId, note.$id)
+            );
+
+            // Esperar a que todas las eliminaciones terminen
+            const results = await Promise.all(deletePromises);
+
+            // Verificar si hubo errores
+            const errors = results.filter(r => r?.error);
+            if (errors.length > 0) {
+                return { error: 'Some notes could not be deleted' };
+            }
+
+            return { success: true };
+        } catch (error) {
+            console.error('Error emptying trash:', error.message);
+            return { error: error.message };
+        }
     }
+
 };
 
 export default noteService;

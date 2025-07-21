@@ -105,16 +105,16 @@ const NoteScreen = () => {
     // Delete a note
 
     const deleteNote = async (id) => {
-        Alert.alert('Delete Note', 'Are you sure you want to delete this note?', [
+        Alert.alert('Move to Trash', 'Are you sure do you want to move this note to the trash?', [
             {
             text: 'Cancel',
             style: 'cancel',
             },
             {
-            text: 'Delete',
+            text: 'Move',
             style: 'destructive',
             onPress: async () => {
-                const response = await noteService.deleteNote(id);
+                const response = await noteService.moveToTrash(id);
                 if (response.error) {
                     Alert.alert('Error', response.error);
                 } else {
@@ -142,6 +142,19 @@ const NoteScreen = () => {
         {...note, text: response.data.text} : note));
         }
     };
+
+    const restoreNote = async (id) => {
+        const response = await noteService.restoreNote(id);
+
+        if (response.error) {
+            Alert.alert('Error', response.error);
+        } else {
+            // Opcional: actualizar el estado para remover la nota restaurada de la papelera
+            setNotes((prevNotes) => prevNotes.filter(note => note.$id !== id));
+            Alert.alert('Restored', 'The note has been restored.');
+        }
+    };
+
 
     const filteredNotes = notes.filter(note => {
         const matchesText = note.text.toLowerCase().includes(searchText.toLowerCase());
@@ -269,9 +282,20 @@ const NoteScreen = () => {
                 </>
             )}
 
-        <TouchableOpacity style={styles.addButton} onPress={() => setModalVisible(true)}>
-            <Text style={styles.addButtonText}>+ Add Note</Text>
+    <View style={{ position: 'absolute', bottom: 80, right: 20, left: 20 }}>
+        <TouchableOpacity 
+            style={[styles.addButton, { backgroundColor: '#dc3545' }]} 
+            onPress={() => router.push('/trash')}
+        >
+            <Text style={styles.addButtonText}>Go to Trash</Text>
         </TouchableOpacity>
+    </View>
+
+    <TouchableOpacity style={styles.addButton} onPress={() => setModalVisible(true)}>
+        <Text style={styles.addButtonText}>+ Add Note</Text>
+    </TouchableOpacity>
+
+
 
         { /* Modal for adding new note */ }
         <AddNoteModal 
