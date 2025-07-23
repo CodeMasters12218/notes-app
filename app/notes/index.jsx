@@ -22,6 +22,8 @@ const NoteScreen = () => {
 
     const [filterTags, setFilterTags] = useState([]);
     const [allTags, setAllTags] = useState([]);
+    const [reminderAt, setReminderAt] = useState(null);
+
 
     useEffect(() => { 
         if (!authLoading && !user) {
@@ -83,12 +85,13 @@ const NoteScreen = () => {
 
     
     // Add a new note
+    
     const addNote = async () => {
         if(newNote.trim() === '') {
             return;
 
         }
-        const response = await noteService.addNote(user.$id, newNote, selectedTags);
+        const response = await noteService.addNote(user.$id, newNote, selectedTags, reminderAt);
 
         if (response.error) {
             Alert.alert('Error', response.error);
@@ -99,6 +102,7 @@ const NoteScreen = () => {
 
         setNewNote('');
         setSelectedTags([]);
+        setReminderAt(null);
         setModalVisible(false);
     };
 
@@ -127,19 +131,19 @@ const NoteScreen = () => {
 
     // Edit a note
 
-    const editNote = async (id, newText) => {
+    const editNote = async (id, newText, reminderAt = null) => {
         if(!newText.trim()) {
             Alert.alert('Error', 'Note text cannot be empty');
             return;
         }
-        const response = await noteService.updateNote(id, newText);
+        const response = await noteService.updateNote(id, {text: newText, reminderAt});
 
         if (response.error) {
             Alert.alert('Error', response.error);
             return;
         } else {
             setNotes((prevNotes) => prevNotes.map((note) => note.$id === id ?
-        {...note, text: response.data.text} : note));
+        {...note, text: response.data.text, reminderAt: response.data.reminderAt} : note));
         }
     };
 
@@ -307,6 +311,8 @@ const NoteScreen = () => {
             user={user}
             selectedTags={selectedTags}
             setSelectedTags={setSelectedTags}
+            reminderAt={reminderAt}
+            setReminderAt={setReminderAt}
         />    
 
 

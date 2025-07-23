@@ -1,6 +1,6 @@
 ﻿import tagService from '@/services/tagService';
 import { useEffect, useState } from 'react';
-import { Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Modal, Platform, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 const AddNoteModal = ({ 
   modalVisible, 
@@ -14,6 +14,11 @@ const AddNoteModal = ({
 }) => {
   const [tagInput, setTagInput] = useState('');
   const [allTags, setAllTags] = useState([]);
+  const [reminderEnabled, setReminderEnabled] = useState(false);
+  const [date, setDate] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+
 
   useEffect(() => {
     const fetchTags = async () => {
@@ -33,6 +38,48 @@ const AddNoteModal = ({
       tag.toLowerCase().includes(tagInput.toLowerCase()) &&
       !selectedTags.includes(tag)
   );
+
+  const toggleReminder = (value) => {
+    setReminderEnabled(value);
+    if (!value) {
+      setDate(null); // o puedes usar un estado separado si manejas recordatorio con más detalle
+    } else {
+      const now = new Date();
+    setDate(now);
+    }
+  };
+
+  const onChangeDate = (event, selectedDate) => {
+    setShowDatePicker(Platform.OS === 'ios');
+    if (selectedDate) {
+      setDate((prevDate) => {
+        const newDate = new Date(
+          selectedDate.getFullYear(),
+          selectedDate.getMonth(),
+          selectedDate.getDate(),
+          prevDate?.getHours() || 0,
+          prevDate?.getMinutes() || 0
+        );
+        return newDate;
+      });
+    }
+  };
+
+  const onChangeTime = (event, selectedTime) => {
+    setShowTimePicker(Platform.OS === 'ios');
+    if (selectedTime) {
+      setDate((prevDate) => {
+        const newDate = new Date(
+          prevDate?.getFullYear() || new Date().getFullYear(),
+          prevDate?.getMonth() || new Date().getMonth(),
+          prevDate?.getDate() || new Date().getDate(),
+          selectedTime.getHours(),
+          selectedTime.getMinutes()
+        );
+        return newDate;
+      });
+    }
+  };
 
   return (
     <Modal
@@ -100,12 +147,49 @@ const AddNoteModal = ({
             ))}
           </View>
 
+          <View style={styles.reminderRow}>
+            <Text style={styles.reminderLabel}>Reminder</Text>
+            <Switch value={reminderEnabled} onValueChange={toggleReminder} />
+          </View>
+
+          {reminderEnabled && (
+            <>
+              <TouchableOpacity onPress={() => setShowDatePicker(true)} style={styles.datetimeButton}>
+                <Text>Select Date: {date?.toLocaleDateString()}</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity onPress={() => setShowTimePicker(true)} style={styles.datetimeButton}>
+                <Text>Select Time: {date?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
+              </TouchableOpacity>
+          </>
+        )}
+
+        {showDatePicker && (
+          <DateTimePicker
+            value={date || new Date()}
+            mode="date"
+            display="default"
+            onChange={onChangeDate}
+            minimumDate={new Date()}
+        />
+      )}
+
+      {showTimePicker && (
+        <DateTimePicker
+          value={date || new Date()}
+          mode="time"
+          display="default"
+          onChange={onChangeTime}
+        />
+      )}
+
+
           {/* Buttons */}
           <View style={styles.modalButtons}>
             <TouchableOpacity style={styles.cancelButton} onPress={() => setModalVisible(false)}>
               <Text style={styles.cancelButtonText}>Cancel</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.saveButton} onPress={addNote}>
+            <TouchableOpacity style={styles.saveButton} onPress={() => addNote(date)}>
               <Text style={styles.saveButtonText}>Save</Text>
             </TouchableOpacity>
           </View>
@@ -189,6 +273,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
     margin: 4,
+  },
+  reminderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  reminderLabel: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  datetimeButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    backgroundColor: '#eee',
+    borderRadius: 6,
+    marginBottom: 8,
   },
 });
 

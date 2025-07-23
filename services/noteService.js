@@ -26,7 +26,7 @@ const noteService = {
         }    
     }, 
     // Add notes   
-    async addNote(user_id, text, tags = []) {
+    async addNote(user_id, text, tags = [], reminderAt = null) {
         if (!text) {
             return {error: "Note text cannot be empty"};
         }
@@ -36,6 +36,7 @@ const noteService = {
             createdAt: new Date().toISOString(),
             user_id: user_id,
             tags: tags,
+            reminderAt: reminderAt,
         }
         const response = await databaseService.createDocument(dbId, colId, data, ID.unique());
 
@@ -58,8 +59,8 @@ const noteService = {
 
     // Update note
 
-    async updateNote(id, text) {
-        const response = await databaseService.updateDocument(dbId, colId, id, {text});
+    async updateNote(id, updates) {
+        const response = await databaseService.updateDocument(dbId, colId, id, updates);
         if (response?.error) {
             return {error: response.error};
         }
