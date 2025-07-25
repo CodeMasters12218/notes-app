@@ -1,6 +1,17 @@
 ﻿import tagService from '@/services/tagService';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import * as Notifications from 'expo-notifications';
 import { useEffect, useState } from 'react';
 import { Modal, Platform, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
+
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
 
 const AddNoteModal = ({ 
   modalVisible, 
@@ -20,18 +31,29 @@ const AddNoteModal = ({
   const [showTimePicker, setShowTimePicker] = useState(false);
 
 
-  useEffect(() => {
-    const fetchTags = async () => {
-      if (user) {
-        const response = await tagService.getTags(user.$id);
-        if (!response.error) {
-          setAllTags(response.data.map(tag => tag.name));
-        }
-      }
-    };
+useEffect(() => {
+  const setup = async () => {
+    const { status } = await Notifications.requestPermissionsAsync();
+    if (status !== 'granted') {
+      alert('Se necesitan permisos para notificaciones');
+    }
+  };
 
-    if (modalVisible) fetchTags(); // solo cuando abre el modal
-  }, [modalVisible]);
+  const fetchTags = async () => {
+    if (user) {
+      const response = await tagService.getTags(user.$id);
+      if (!response.error) {
+        setAllTags(response.data.map(tag => tag.name));
+      }
+    }
+  };
+
+  if (modalVisible) {
+    setup();
+    fetchTags();
+  }
+}, [modalVisible, user]);
+
 
   const filteredSuggestions = allTags.filter(
     tag =>
@@ -80,6 +102,22 @@ const AddNoteModal = ({
       });
     }
   };
+
+  const programNotification = async (date) => {
+  try {
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: '📝 Reminder',
+        body: "Don't forget to check this note!",
+        sound: true,
+      },
+      trigger: date,
+    });
+  } catch (error) {
+    console.error('Error programming notification:', error);
+  }
+};
+
 
   return (
     <Modal
@@ -189,9 +227,18 @@ const AddNoteModal = ({
             <TouchableOpacity style={styles.cancelButton} onPress={() => setModalVisible(false)}>
               <Text style={styles.cancelButtonText}>Cancel</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.saveButton} onPress={() => addNote(date)}>
-              <Text style={styles.saveButtonText}>Save</Text>
-            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.saveButton}
+              onPress={() => {
+                if (reminderEnabled && date) {
+                  programNotification(date);
+                }
+                addNote(date);
+                setModalVisible(false); // Cierra modal después de guardar
+              }}
+            >
+          <Text style={styles.saveButtonText}>Save</Text>
+        </TouchableOpacity>
           </View>
         </View>
       </View>

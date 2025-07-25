@@ -36,7 +36,7 @@ const noteService = {
             createdAt: new Date().toISOString(),
             user_id: user_id,
             tags: tags,
-            reminderAt: reminderAt,
+            reminderAt: reminderAt ? reminderAt.toISOString() : null,
         }
         const response = await databaseService.createDocument(dbId, colId, data, ID.unique());
 
