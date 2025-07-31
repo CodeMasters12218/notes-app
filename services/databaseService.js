@@ -44,5 +44,22 @@ const databaseService = {
             return {error: error.message}
         }
     },
+    async createFile(bucketId, fileId, file) {
+        try {
+            return await storage.createFile(bucketId, fileId, file);
+        } catch (error) {
+            console.error("Error uploading file:", error.message);
+            return { error: error.message };
+        }
+    },
+        
+    async getFileView(bucketId, fileId) {
+        try {
+            return storage.getFileView(bucketId, fileId);
+        } catch (error) {
+            console.error("Error getting file:", error.message);
+            return { error: error.message };
+        }
+    },
 };
 export default databaseService;

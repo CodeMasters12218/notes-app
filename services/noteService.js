@@ -1,9 +1,12 @@
 ﻿import { ID, Query } from "react-native-appwrite";
 import databaseService from "./databaseService";
+import tagService from "./tagService";
+
 
 // Appwrite database and collection id service for notes
 const dbId = process.env.EXPO_PUBLIC_APPWRITE_DB_ID;
 const colId = process.env.EXPO_PUBLIC_APPWRITE_COL_NOTES_ID;
+const bucketID = process.env.EXPO_PUBLIC_APPWRITE_BUCKET_ID;
 
 const noteService = {
     // Get Notes
@@ -26,34 +29,48 @@ const noteService = {
         }    
     }, 
     // Add notes   
-    async addNote(user_id, text, tags = [], reminderAt = null) {
-        if (!text) {
+    async addNote(user_id, text, tags = [], reminderAt = null, imageUri = null) {
+        if (!text && !imageUri) {
             return {error: "Note text cannot be empty"};
         }
 
-        const data = {
-            text: text,
-            createdAt: new Date().toISOString(),
-            user_id: user_id,
-            tags: tags,
-            reminderAt: reminderAt ? reminderAt.toISOString() : null,
-        }
-        const response = await databaseService.createDocument(dbId, colId, data, ID.unique());
-
-        if (response?.error) {
-            return {error: response.error};
-        }
-
-        const existingTags = await tagService.getTags(user_id);
-        const existingTagNames = existingTags.data.map(tag => tag.name);
-
-        for (const tag of tags) {
-            if (!existingTagNames.includes(tag)) {
-                await tagService.addTag(user_id, tag);
+        let imageUrl = null;
+        try {
+            if (imageUri) {
+                const fileId = await this.uploadImageToAppwrite(imageUri);
+                if (fileId) {
+                    imageUrl = await this.getImageUrl(fileId);
+                }
             }
-        }
 
-        return {data: response};
+            const data = {
+                text: text,
+                createdAt: new Date().toISOString(),
+                user_id: user_id,
+                tags: tags,
+                reminderAt: reminderAt ? reminderAt.toISOString() : null,
+                imageUrl: imageUrl,
+            }
+            const response = await databaseService.createDocument(dbId, colId, data, ID.unique());
+
+            if (response?.error) {
+                return {error: response.error};
+            }
+
+            const existingTags = await tagService.getTags(user_id);
+            const existingTagNames = existingTags.data.map(tag => tag.name);
+
+            for (const tag of tags) {
+                if (!existingTagNames.includes(tag)) {
+                    await tagService.addTag(user_id, tag);
+                }
+            }
+
+            return {data: response};
+        } catch (error) {
+            console.error("Error creating note:", error);
+            return {error: error.message};
+        }
     },
 
 
@@ -159,6 +176,22 @@ const noteService = {
             console.error('Error emptying trash:', error.message);
             return { error: error.message };
         }
+    },
+
+    uploadImageToAppwrite: async function(uri) {
+        try {
+            const response = await fetch(uri);
+            const blob = await response.blob();
+            const file = await databaseService.storage.createFile(bucketID, ID.unique(), blob);
+            return file.$id;
+        } catch (error) {
+            console.error('Error uploading image:', error);
+            return null;
+        }
+    },
+
+    getImageUrl: async function(fileId) {
+        return databaseService.storage.getFileView(bucketID, fileId).href;
     }
 
 };

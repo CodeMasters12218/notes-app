@@ -1,5 +1,5 @@
 ﻿import { useRef, useState } from 'react';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Image, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 
 
@@ -104,7 +104,11 @@ const NoteItem = ({ note, onDelete, onEdit }) => {
     )}
   </View>
 ) : (
-  <View>
+  <View style={{ flex: 1 }}>
+    {note.imageUrl && (
+        <Image source={{ uri: note.imageUrl }} style={styles.noteImage} onError={(e) => console.log("Error loading image:", e.nativeEvent.error)}  />
+    )}
+    
     <Text style={styles.noteText}>{note.text}</Text>
     {note.reminderAt && (
       <Text style={styles.reminderText}>
@@ -146,6 +150,12 @@ const styles = StyleSheet.create({
         marginVertical: 5,
         borderRadius: 5,
         backgroundColor: '#f5f5f5',
+    },
+    noteImage: {
+        width: 100,
+        height: 100,
+        borderRadius: 8,
+        marginBottom: 8,
     },
     noteText: {
         fontSize: 18,

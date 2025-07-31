@@ -1,10 +1,15 @@
-﻿import AddNoteModal from '@/components/AddNoteModal';
+﻿import AddImageNoteModal from '@/components/AddImageNoteModal';
+import AddNoteMenuModal from '@/components/AddNoteMenuModal';
+import AddNoteModal from '@/components/AddNoteModal';
+import ImageSourcePickerModal from '@/components/ImageSourcePickerModal';
 import NoteList from '@/components/NoteList';
 import { useAuth } from '@/contexts/AuthContext';
 import noteService from '@/services/noteService';
+import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+
 
 const NoteScreen = () => {
     const router = useRouter();
@@ -23,6 +28,12 @@ const NoteScreen = () => {
     const [filterTags, setFilterTags] = useState([]);
     const [allTags, setAllTags] = useState([]);
     const [reminderAt, setReminderAt] = useState(null);
+    const [menuVisible, setMenuVisible] = useState(false);
+    const [imagePickerMenuVisible, setImagePickerMenuVisible] = useState(false);
+    const [imageNoteModalVisible, setImageNoteModalVisible] = useState(false);
+    const [imageToAdd, setImageToAdd] = useState(null);
+
+
 
 
     useEffect(() => { 
@@ -174,6 +185,61 @@ const NoteScreen = () => {
     );
 
 
+    const pickImageFromLibrary = async () => {
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== 'granted') {
+            Alert.alert('Access denied', 'You need to grant permission to access the gallery');
+            return;
+        }
+
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            quality: 0.8,
+            allowsEditing: true,
+        });
+
+        if (!result.canceled) {
+            const imageUri = result.assets[0].uri;
+            setImageToAdd(imageUri);
+            setImageNoteModalVisible(true);
+        }
+    };
+
+    const pickImageFromCamera = async () => {
+        const { status } = await ImagePicker.requestCameraPermissionsAsync();
+        if (status !== 'granted') {
+            Alert.alert('Access denied', 'You need to grant permission to access the camera');
+            return;
+        }
+
+        const result = await ImagePicker.launchCameraAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            quality: 0.8,
+            allowsEditing: true,
+        });
+
+        if (!result.canceled) {
+            const imageUri = result.assets[0].uri;
+            setImageToAdd(imageUri);
+            setImageNoteModalVisible(true);
+        }
+    };
+
+    const saveImageNote = async (text, imageUri) => {
+        const response = await noteService.addNote(user.$id, text, [], null, imageUri);
+
+        if (response.error) {
+            Alert.alert('Error', response.error);
+            return;
+        }
+
+        setNotes([...notes, response.data]);
+        setImageToAdd(null);
+        setImageNoteModalVisible(false);
+    };
+
+
+
     return (
         <View style={styles.container}>
             { loading ? (
@@ -295,7 +361,7 @@ const NoteScreen = () => {
         </TouchableOpacity>
     </View>
 
-    <TouchableOpacity style={styles.addButton} onPress={() => setModalVisible(true)}>
+    <TouchableOpacity style={styles.addButton} onPress={() => setMenuVisible(true)}>
         <Text style={styles.addButtonText}>+ Add Note</Text>
     </TouchableOpacity>
 
@@ -313,7 +379,33 @@ const NoteScreen = () => {
             setSelectedTags={setSelectedTags}
             reminderAt={reminderAt}
             setReminderAt={setReminderAt}
-        />    
+        />   
+
+        <AddNoteMenuModal 
+            visible={menuVisible} 
+            onClose={() => setMenuVisible(false)} 
+            onAddText={() => setModalVisible(true)}  
+            onAddImage={() => {
+                setImagePickerMenuVisible(true); 
+            }}
+        />
+
+        <ImageSourcePickerModal
+            visible={imagePickerMenuVisible}
+            onClose={() => setImagePickerMenuVisible(false)}
+            onPickCamera={pickImageFromCamera}
+            onPickGallery={pickImageFromLibrary}
+        />
+
+        <AddImageNoteModal
+            visible={imageNoteModalVisible}
+            imageUri={imageToAdd}
+            onCancel={() => {
+                setImageNoteModalVisible(false);
+                setImageToAdd(null);
+            }}
+            onSave={saveImageNote}
+        />
 
 
     </View>);
