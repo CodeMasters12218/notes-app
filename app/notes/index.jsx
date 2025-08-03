@@ -1,6 +1,8 @@
 ﻿import AddImageNoteModal from '@/components/AddImageNoteModal';
 import AddNoteMenuModal from '@/components/AddNoteMenuModal';
 import AddNoteModal from '@/components/AddNoteModal';
+import AudioPlayer from '@/components/AudioPlayer';
+import AudioRecorder from '@/components/AudioRecorder';
 import ImageSourcePickerModal from '@/components/ImageSourcePickerModal';
 import NoteList from '@/components/NoteList';
 import { useAuth } from '@/contexts/AuthContext';
@@ -32,6 +34,7 @@ const NoteScreen = () => {
     const [imagePickerMenuVisible, setImagePickerMenuVisible] = useState(false);
     const [imageNoteModalVisible, setImageNoteModalVisible] = useState(false);
     const [imageToAdd, setImageToAdd] = useState(null);
+    const [audioUri, setAudioUri] = useState(null);
 
 
 
@@ -102,7 +105,7 @@ const NoteScreen = () => {
             return;
 
         }
-        const response = await noteService.addNote(user.$id, newNote, selectedTags, reminderAt);
+        const response = await noteService.addNote(user.$id, newNote, selectedTags, reminderAt, imageUri, audioUri);
 
         if (response.error) {
             Alert.alert('Error', response.error);
@@ -406,6 +409,10 @@ const NoteScreen = () => {
             }}
             onSave={saveImageNote}
         />
+
+        <AudioRecorder onRecordingComplete={setAudioUri} />
+
+        {audioUri && <AudioPlayer uri={audioUri} />}
 
 
     </View>);

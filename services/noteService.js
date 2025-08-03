@@ -1,4 +1,5 @@
-﻿import { ID, Query } from "react-native-appwrite";
+﻿import * as FileSystem from 'expo-file-system';
+import { ID, Query } from "react-native-appwrite";
 import databaseService from "./databaseService";
 import tagService from "./tagService";
 
@@ -29,17 +30,25 @@ const noteService = {
         }    
     }, 
     // Add notes   
-    async addNote(user_id, text, tags = [], reminderAt = null, imageUri = null) {
-        if (!text && !imageUri) {
+    async addNote(user_id, text, tags = [], reminderAt = null, imageUri = null, audioUri = null) {
+        if (!text && !imageUri && !audioUri) {
             return {error: "Note text cannot be empty"};
         }
 
         let imageUrl = null;
+        let audioUrl = null;
         try {
             if (imageUri) {
                 const fileId = await this.uploadImageToAppwrite(imageUri);
                 if (fileId) {
                     imageUrl = await this.getImageUrl(fileId);
+                }
+            }
+
+            if (audioUri) {
+                const fileId = await this.uploadAudioToAppwrite(audioUri);
+                if (fileId) {
+                    audioUrl = await this.getAudioUrl(fileId); // debes implementarla igual que getImageUrl
                 }
             }
 
@@ -50,6 +59,7 @@ const noteService = {
                 tags: tags,
                 reminderAt: reminderAt ? reminderAt.toISOString() : null,
                 imageUrl: imageUrl,
+                audioUrl: audioUrl,
             }
             const response = await databaseService.createDocument(dbId, colId, data, ID.unique());
 
@@ -192,7 +202,38 @@ const noteService = {
 
     getImageUrl: async function(fileId) {
         return databaseService.storage.getFileView(bucketID, fileId).href;
-    }
+    },
+    getAudioUrl: async function(fileId) {
+        return databaseService.storage.getFileView(bucketID, fileId).href;
+    },  
+    uploadAudioToAppwrite: async function(uri) {
+            try {
+                const fileName = audioUri.split('/').pop();
+                const mimeType = mime.getType(audioUri);
+
+                const fileBuffer = await FileSystem.readAsStringAsync(audioUri, {
+                    encoding: FileSystem.EncodingType.Base64,
+                });
+
+                const file = Buffer.from(fileBuffer, 'base64');
+
+                const response = await storage.createFile(
+                    bucketId,
+                    ID.unique(),
+                {
+                    uri: audioUri,
+                    name: fileName,
+                    type: mimeType,
+                }
+            );
+
+            return response.$id;
+        } catch (err) {
+            console.error("Error subiendo audio:", err);
+            return null;
+        }
+
+    },    
 
 };
 
