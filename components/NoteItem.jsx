@@ -1,6 +1,6 @@
 ﻿import { useRef, useState } from 'react';
 import { Image, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
-
+import { Path, Svg, SvgXml } from 'react-native-svg';
 
 
 const NoteItem = ({ note, onDelete, onEdit }) => {
@@ -109,6 +109,28 @@ const NoteItem = ({ note, onDelete, onEdit }) => {
         <Image source={{ uri: note.imageUrl }} style={styles.noteImage} onError={(e) => console.log("Error loading image:", e.nativeEvent.error)}  />
     )}
     
+    {note.drawing && typeof note.drawing === 'string' ? (
+        <View style={styles.drawingContainer}>
+            <SvgXml xml={note.drawing} width="100%" height={150} />
+        </View>
+        ) : note.drawing && Array.isArray(note.drawing) && note.drawing.length > 0 ? (
+        <View style={{ marginVertical: 8 }}>
+            {note.drawing.map((pathData, index) => (
+            <Svg key={index} height={100} width={100}>
+                <Path
+                d={pathData.path}
+                stroke={pathData.color || 'black'}
+                strokeWidth={pathData.strokeWidth || 2}
+                fill="transparent"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                />
+                </Svg>
+            ))}
+        </View>
+    ) : null}
+
+    
     <Text style={styles.noteText}>{note.text}</Text>
     {note.reminderAt && (
       <Text style={styles.reminderText}>
@@ -143,7 +165,7 @@ const NoteItem = ({ note, onDelete, onEdit }) => {
 };
 
 const styles = StyleSheet.create({
-        noteItem: {
+    noteItem: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         padding: 15,
@@ -196,6 +218,13 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         padding: 8,
         borderRadius: 6,
+    },
+    drawingContainer: {
+        marginTop: 10,
+        borderWidth: 1,
+        borderColor: '#eee',
+        borderRadius: 5,
+        padding: 5,
     },
 });    
 

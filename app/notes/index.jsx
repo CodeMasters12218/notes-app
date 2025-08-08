@@ -35,6 +35,7 @@ const NoteScreen = () => {
     const [imageNoteModalVisible, setImageNoteModalVisible] = useState(false);
     const [imageToAdd, setImageToAdd] = useState(null);
     const [audioUri, setAudioUri] = useState(null);
+    const [drawingSvg, setDrawingSvg] = useState(null); 
 
 
 
@@ -74,6 +75,17 @@ const NoteScreen = () => {
     }, [user]);
 
 
+    useEffect(() => {
+        const getDrawing = async () => {
+        const svg = await AsyncStorage.getItem('lastDrawing');
+        if (svg) {
+            setDrawingSvg(svg);
+            AsyncStorage.removeItem('lastDrawing');
+        }
+    };
+    getDrawing();
+}, []);
+
     const fetchNotes = async () => {
         setLoading(true);
         const response = await noteService.getNotes(user.$id);
@@ -101,11 +113,12 @@ const NoteScreen = () => {
     // Add a new note
     
     const addNote = async () => {
-        if(newNote.trim() === '') {
+        if(newNote.trim() === '' && !drawingSvg) {
+            Alert.alert('Error', 'Note text cannot be empty');
             return;
 
         }
-        const response = await noteService.addNote(user.$id, newNote, selectedTags, reminderAt, imageUri, audioUri);
+        const response = await noteService.addNote(user.$id, newNote, selectedTags, reminderAt, imageUri, audioUri, drawingSvg);
 
         if (response.error) {
             Alert.alert('Error', response.error);
@@ -117,6 +130,7 @@ const NoteScreen = () => {
         setNewNote('');
         setSelectedTags([]);
         setReminderAt(null);
+        setDrawingSvg(null);
         setModalVisible(false);
     };
 
@@ -241,7 +255,19 @@ const NoteScreen = () => {
         setImageNoteModalVisible(false);
     };
 
+    /*
+    const openDrawScreen = () => {
+        const callbackKey = `callback_${Date.now()}`;
+        router.push({
+            pathname: "/drawscreen",
+        params: { callbackKey }
+        });
+    };
+    */
 
+    const openDrawScreen = () => {
+        router.push("/drawscreen");
+    };
 
     return (
         <View style={styles.container}>
@@ -382,6 +408,7 @@ const NoteScreen = () => {
             setSelectedTags={setSelectedTags}
             reminderAt={reminderAt}
             setReminderAt={setReminderAt}
+            drawingSvg={drawingSvg}
         />   
 
         <AddNoteMenuModal 
@@ -391,6 +418,7 @@ const NoteScreen = () => {
             onAddImage={() => {
                 setImagePickerMenuVisible(true); 
             }}
+            onAddDrawing={openDrawScreen}
         />
 
         <ImageSourcePickerModal

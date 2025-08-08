@@ -1,6 +1,6 @@
 ﻿import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-const AddNoteMenuModal = ({ visible, onClose, onAddText, onAddImage }) => {
+const AddNoteMenuModal = ({ visible, onClose, onAddText, onAddImage, onAddDrawing }) => {
   return (
     <Modal
       animationType="slide"
@@ -30,6 +30,16 @@ const AddNoteMenuModal = ({ visible, onClose, onAddText, onAddImage }) => {
             }}
           >
             <Text style={styles.optionText}>Add image</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.optionButton}
+            onPress={() => {
+              onAddDrawing();
+              onClose();
+            }}
+          >
+            <Text style={styles.optionText}>Add drawing</Text>
           </TouchableOpacity>
 
           <TouchableOpacity

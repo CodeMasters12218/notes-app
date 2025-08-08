@@ -3,6 +3,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import * as Notifications from 'expo-notifications';
 import { useEffect, useState } from 'react';
 import { Modal, Platform, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { SvgXml } from 'react-native-svg';
 
 
 Notifications.setNotificationHandler({
@@ -21,7 +22,8 @@ const AddNoteModal = ({
   addNote,
   user,
   selectedTags,
-  setSelectedTags
+  setSelectedTags,
+  drawingSvg,
 }) => {
   const [tagInput, setTagInput] = useState('');
   const [allTags, setAllTags] = useState([]);
@@ -29,7 +31,6 @@ const AddNoteModal = ({
   const [date, setDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
-
 
 useEffect(() => {
   const setup = async () => {
@@ -221,6 +222,11 @@ useEffect(() => {
         />
       )}
 
+      {drawingSvg && (
+        <View style={styles.drawingPreview}>
+          <SvgXml xml={drawingSvg} width="100%" height="100%" />
+        </View>
+      )}
 
           {/* Buttons */}
           <View style={styles.modalButtons}>
@@ -338,6 +344,12 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     marginBottom: 8,
   },
+  drawingPreview: {
+    height: 150,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    marginVertical: 10,
+  }
 });
 
 export default AddNoteModal;

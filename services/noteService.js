@@ -30,7 +30,7 @@ const noteService = {
         }    
     }, 
     // Add notes   
-    async addNote(user_id, text, tags = [], reminderAt = null, imageUri = null, audioUri = null) {
+    async addNote(user_id, text, tags = [], reminderAt = null, imageUri = null, audioUri = null, drawingSvg = null) {
         if (!text && !imageUri && !audioUri) {
             return {error: "Note text cannot be empty"};
         }
@@ -60,6 +60,7 @@ const noteService = {
                 reminderAt: reminderAt ? reminderAt.toISOString() : null,
                 imageUrl: imageUrl,
                 audioUrl: audioUrl,
+                drawingSvg: drawingSvg ? JSON.stringify(drawingSvg) : null, // Guardar los paths de dibujo como JSON
             }
             const response = await databaseService.createDocument(dbId, colId, data, ID.unique());
 
