@@ -3,6 +3,7 @@ import * as Notifications from "expo-notifications";
 import { Stack } from "expo-router";
 import React, { useEffect } from "react";
 import { StyleSheet, Text, TouchableOpacity } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 const HeaderLogout = () => {
   const { user, logout } = useAuth();
@@ -25,31 +26,33 @@ const RootLayout = () => {
   }, []);
 
   return (
-    <AuthProvider>
-      <Stack
-        screenOptions={{
-          headerStyle: {
-            backgroundColor: "#ff8c00",
-          },
-          headerTintColor: "#fff",
-          headerTitleStyle: {
-            fontSize: 20,
-            fontWeight: "bold",
-          },
-          headerRight: () => <HeaderLogout />,
-          contentStyle: {
-            paddingHorizontal: 10,
-            paddingTop: 10,
-            backgroundColor: "#fff",
-          },
-        }}
-      >
-        <Stack.Screen name="index" options={{ title: "Home" }} />
-        <Stack.Screen name="notes" options={{ headerTitle: "Notes" }} />
-        <Stack.Screen name="auth" options={{ headerTitle: "Login" }} />
-        <Stack.Screen name="drawscreen" options={{ headerTitle: "Draw Screen" }} />
-      </Stack>
-    </AuthProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <AuthProvider>
+        <Stack
+          screenOptions={{
+            headerStyle: {
+              backgroundColor: "#ff8c00",
+            },
+            headerTintColor: "#fff",
+            headerTitleStyle: {
+              fontSize: 20,
+              fontWeight: "bold",
+            },
+            headerRight: () => <HeaderLogout />,
+            contentStyle: {
+              paddingHorizontal: 10,
+              paddingTop: 10,
+              backgroundColor: "#fff",
+            },
+          }}
+        >
+          <Stack.Screen name="index" options={{ title: "Home" }} />
+          <Stack.Screen name="notes" options={{ headerTitle: "Notes" }} />
+          <Stack.Screen name="auth" options={{ headerTitle: "Login" }} />
+          <Stack.Screen name="drawscreen" options={{ headerTitle: "Draw Screen" }} />
+        </Stack>
+      </AuthProvider>
+    </GestureHandlerRootView>
   );
 };
 

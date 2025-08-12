@@ -1,4 +1,4 @@
-﻿import { database } from "./appwrite";
+﻿import { database, ID, storage } from "./appwrite";
 
 const databaseService = {
     // List documents
@@ -16,9 +16,9 @@ const databaseService = {
     // Create a document
     async createDocument(dbID, colId, data, id = null) {
         try {
-            return await database.createDocument(dbID, colId, id || undefined, data);
+            return await database.createDocument(dbID, colId, id || ID.unique(), data);
         } catch (error) {
-            console.error("Error creating document:", error.message);
+            console.error("Error creating document:", error);
             return {error: error.message}
         }
     },

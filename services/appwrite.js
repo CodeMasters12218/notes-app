@@ -30,5 +30,5 @@ const account = new Account(client);
 
 const storage = new Storage(client);    
 
-export { account, client, config, database };
+export { account, client, config, database, storage };
 

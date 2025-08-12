@@ -111,19 +111,70 @@ const NoteScreen = () => {
 
     
     // Add a new note
+
+    const handleAddNote = async () => {
+
+        if(newNote.trim() === '' && !drawingSvg) {
+            Alert.alert('Error', 'Note text cannot be empty');
+            return;
+        }
+
+        const response = await noteService.addNote(
+            user.$id,
+            newNote,
+            selectedTags,
+            reminderAt,
+            imageToAdd, 
+            audioUri,
+            drawingSvg
+        );
+
+        console.log("[NoteScreen] Response de addNote:", response);
+
+        if (response.error) {
+            Alert.alert('Error', response.error);
+            return;
+        }
+
+        setNotes([...notes, response.data]);
+
+        // Limpiar estados
+        setNewNote('');
+        setSelectedTags([]);
+        setReminderAt(null);
+        setDrawingSvg(null);
+        setModalVisible(false);
+        setAudioUri(null);
+        setImageToAdd(null); // Asegúrate de limpiar esto también si estás usando imágenes
+    };
+
     
+    /*
     const addNote = async () => {
+        console.log("Local addNote definido aquí:", addNote.toString());
         if(newNote.trim() === '' && !drawingSvg) {
             Alert.alert('Error', 'Note text cannot be empty');
             return;
 
         }
-        const response = await noteService.addNote(user.$id, newNote, selectedTags, reminderAt, imageUri, audioUri, drawingSvg);
+
+        console.log("IMPORT noteService ES:", noteService);
+        console.log("IMPORT KEYS:", Object.keys(noteService));
+        console.log("addNote === noteService.addNote:", addNote === noteService.addNote);
+        console.log("Trying to add note...");
+        console.log("noteService.addNote is:", noteService.addNote);
+        console.log("typeof noteService.addNote:", typeof noteService.addNote);
+        console.log("Llamando a addNote ahora...");
+        const response = await noteService.addNote(user.$id, newNote, selectedTags, reminderAt, imageUri, audioUri, drawingSvg);  
+        console.log("Volvió de addNote");
+        console.log("Response from addNote:", response);
 
         if (response.error) {
+            console.error("Error adding note:", response.error);
             Alert.alert('Error', response.error);
             return;
         } else {
+            console.log("Note added successfully:", response.data);
             setNotes([...notes, response.data]);
         }
 
@@ -133,6 +184,7 @@ const NoteScreen = () => {
         setDrawingSvg(null);
         setModalVisible(false);
     };
+    */
 
     // Delete a note
 
@@ -164,7 +216,7 @@ const NoteScreen = () => {
             Alert.alert('Error', 'Note text cannot be empty');
             return;
         }
-        const response = await noteService.updateNote(id, {text: newText, reminderAt});
+        const response = await noteService.updateNote(id, {text: newText, reminderAt, tasks: parseTasksFromText(newText)});
 
         if (response.error) {
             Alert.alert('Error', response.error);
@@ -380,7 +432,7 @@ const NoteScreen = () => {
                     )}
                 </>
             )}
-
+    
     <View style={{ position: 'absolute', bottom: 80, right: 20, left: 20 }}>
         <TouchableOpacity 
             style={[styles.addButton, { backgroundColor: '#dc3545' }]} 
@@ -402,7 +454,7 @@ const NoteScreen = () => {
             setModalVisible={setModalVisible}
             newNote={newNote}
             setNewNote={setNewNote}
-            addNote={addNote}
+            addNote={handleAddNote}
             user={user}
             selectedTags={selectedTags}
             setSelectedTags={setSelectedTags}

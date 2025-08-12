@@ -1,4 +1,6 @@
-﻿import tagService from '@/services/tagService';
+﻿import TaskList from '@/components/TaskList';
+import tagService from '@/services/tagService';
+import { parseTasksFromText, serializeTasksToText } from '@/services/taskUtils';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as Notifications from 'expo-notifications';
 import { useEffect, useState } from 'react';
@@ -31,14 +33,18 @@ const AddNoteModal = ({
   const [date, setDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
+  const [tasks, setTasks] = useState([]);
 
 useEffect(() => {
   const setup = async () => {
     const { status } = await Notifications.requestPermissionsAsync();
     if (status !== 'granted') {
-      alert('Se necesitan permisos para notificaciones');
+      alert('Notifications permission not granted');
     }
   };
+
+
+
 
   const fetchTags = async () => {
     if (user) {
@@ -54,6 +60,14 @@ useEffect(() => {
     fetchTags();
   }
 }, [modalVisible, user]);
+
+
+  useEffect(() => {
+    if (modalVisible) {
+      const parsed = parseTasksFromText(newNote);
+      setTasks(parsed);
+    }
+  }, [modalVisible, newNote]);
 
 
   const filteredSuggestions = allTags.filter(
@@ -105,19 +119,28 @@ useEffect(() => {
   };
 
   const programNotification = async (date) => {
-  try {
-    await Notifications.scheduleNotificationAsync({
-      content: {
-        title: '📝 Reminder',
-        body: "Don't forget to check this note!",
-        sound: true,
-      },
-      trigger: date,
-    });
-  } catch (error) {
-    console.error('Error programming notification:', error);
-  }
-};
+    try {
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: '📝 Reminder',
+          body: "Don't forget to check this note!",
+          sound: true,
+        },
+        trigger: date,
+      });
+    } catch (error) {
+      console.error('Error programming notification:', error);
+    }
+  };
+
+  const handleTasksChange = (updatedTasks) => {
+    setTasks(updatedTasks);
+    const updatedText = serializeTasksToText(updatedTasks);
+    setNewNote(updatedText);
+  };
+
+
+
 
 
   return (
@@ -130,6 +153,12 @@ useEffect(() => {
       <View style={styles.modalOverlay}>
         <View style={styles.modalContent}>
           <Text style={styles.modalTitle}>Add a New Note</Text>
+
+          <TaskList
+            noteId={null}
+            initialTasks={tasks}
+            onTasksChange={handleTasksChange}
+          />
 
           <TextInput
             style={styles.input}
