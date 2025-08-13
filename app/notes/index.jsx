@@ -6,6 +6,7 @@ import AudioRecorder from '@/components/AudioRecorder';
 import ImageSourcePickerModal from '@/components/ImageSourcePickerModal';
 import NoteList from '@/components/NoteList';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import noteService from '@/services/noteService';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
@@ -16,6 +17,7 @@ import { ActivityIndicator, Alert, StyleSheet, Text, TextInput, TouchableOpacity
 const NoteScreen = () => {
     const router = useRouter();
     const { user, loading: authLoading } = useAuth();
+    const { theme } = useTheme();
     
     const [notes, setNotes] = useState([]);
     const [modalVisible, setModalVisible] = useState(false); 
@@ -322,7 +324,7 @@ const NoteScreen = () => {
     };
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, {backgroundColor: theme.background}]}>
             { loading ? (
                 <ActivityIndicator size="large" color="#007bff" /> 
             ) : (
@@ -330,8 +332,12 @@ const NoteScreen = () => {
                     {error && <Text style={styles.errorText}>{error}</Text>}
 
                     <TextInput 
-                        style={styles.searchInput}
+                        style={[styles.searchInput, { 
+                            backgroundColor: theme.inputBackground,
+                            color: theme.text 
+                    }]}
                         placeholder="Search notes..."
+                        placeholderTextColor={theme.text === '#FFFFFF' ? '#aaa' : '#666'}
                         value={searchText}
                         onChangeText={setSearchText}
                         autoCorrect={false}
@@ -442,8 +448,8 @@ const NoteScreen = () => {
         </TouchableOpacity>
     </View>
 
-    <TouchableOpacity style={styles.addButton} onPress={() => setMenuVisible(true)}>
-        <Text style={styles.addButtonText}>+ Add Note</Text>
+    <TouchableOpacity style={[styles.addButton, {backgroundColor: theme.buttonBackground}]} onPress={() => setMenuVisible(true)}>
+        <Text style={[styles.addButtonText, {color: theme.buttonText}]}>+ Add Note</Text>
     </TouchableOpacity>
 
 
@@ -502,20 +508,24 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         padding: 20,
-        backgroundColor: '#fff',
+    },
+    searchInput: {
+        height: 40,
+        borderWidth: 1,
+        borderRadius: 8,
+        padding: 10,
+        marginBottom: 15,
     },
     addButton: {
         position: 'absolute',
         bottom: 20,
         right: 20,
         left: 20,
-        backgroundColor: '#007bff',
         padding: 15,
         borderRadius: 8,
         alignItems: 'center',
     },
     addButtonText: {
-        color: '#fff',
         fontSize: 18,
         fontWeight: 'bold',
     },

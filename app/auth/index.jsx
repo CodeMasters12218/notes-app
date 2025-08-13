@@ -1,4 +1,5 @@
 ﻿import { useAuth } from '@/contexts/AuthContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -11,6 +12,8 @@ const AuthScreen = () => {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [isRegistering, setIsRegistering] = useState(false);
     const [error, setError] = useState(false);
+
+    const {theme} = useTheme();
 
 
     const handleAuth = async () => {
@@ -48,8 +51,8 @@ const AuthScreen = () => {
     };
 
     
-    return ( <View style={styles.container}>
-        <Text style = {styles.header}>{ isRegistering ? 'Sign Up' : 'Login'}</Text>
+    return ( <View style={[styles.container, {backgroundColor: theme.background}]}>
+        <Text style = {[styles.header, {color: theme.text}]}>{ isRegistering ? 'Sign Up' : 'Login'}</Text>
 
         {error ? <Text style={styles.error}>{error}</Text> : null}
     <TextInput 
@@ -63,9 +66,13 @@ const AuthScreen = () => {
     />
 
     <TextInput 
-        style={styles.input}
+        style={[styles.input, {
+            backgroundColor: theme.inputBackground,
+            color: theme.text,
+            borderColor: theme.text === '#FFFFFF' ? '#555' : '#ddd'
+        }]}
         placeholder='Password'
-        placeholderTextColor='#aaa'
+        placeholderTextColor={theme.text === '#FFFFFF' ? '#aaa' : '#666'}
         value={password}
         onChangeText={setPassword}
         secureTextEntry
@@ -74,9 +81,13 @@ const AuthScreen = () => {
 
     { isRegistering && (
         <TextInput 
-            style={styles.input}
+            style={[styles.input, {
+                backgroundColor: theme.inputBackground,
+                color: theme.text,
+                borderColor: theme.text === '#FFFFFF' ? '#555' : '#ddd'
+            }]}
             placeholder='Confirm Password'
-            placeholderTextColor='#aaa'
+            placeholderTextColor={theme.text === '#FFFFFF' ? '#aaa' : '#666'}
             value={confirmPassword}
             onChangeText={setConfirmPassword}
             secureTextEntry

@@ -1,6 +1,9 @@
-﻿import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+﻿import { useTheme } from '@/contexts/ThemeContext';
+import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 const AddNoteMenuModal = ({ visible, onClose, onAddText, onAddImage, onAddDrawing }) => {
+  const { theme } = useTheme();
+  
   return (
     <Modal
       animationType="slide"
@@ -8,8 +11,8 @@ const AddNoteMenuModal = ({ visible, onClose, onAddText, onAddImage, onAddDrawin
       visible={visible}
       onRequestClose={onClose}
     >
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContainer}>
+      <View style={[styles.modalOverlay, {backgroundColor: 'rgba(0,0,0,0.7)'}]}>
+        <View style={[styles.modalContainer, { backgroundColor: theme.primary}]}>
           <Text style={styles.title}>What do you want to add?</Text>
 
           <TouchableOpacity

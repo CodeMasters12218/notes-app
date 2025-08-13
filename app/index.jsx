@@ -1,11 +1,13 @@
 import PostItImage from '@/assets/images/post-it.png';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import { useRouter } from 'expo-router';
 import { useEffect } from 'react';
 import { ActivityIndicator, Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 const HomeScreen = () => {
   const {user, loading} = useAuth();
+  const { theme } = useTheme();
   const router = useRouter(); 
   
   useEffect(() => {  
@@ -24,18 +26,18 @@ const HomeScreen = () => {
 
   return (
     <View
-      style={styles.container}>
+      style={[styles.container, { backgroundColor: theme.background }]}>
       <Image source= {PostItImage} style={styles.image} />
-      <Text style = {styles.title}>Welcome To Notes App</Text>
-      <Text style = {styles.subtitle}>
+      <Text style = {[styles.title, {color: theme.text}]}>Welcome To Notes App</Text>
+      <Text style = {[styles.subtitle, {color: theme.text}]}>
         Capture your thoughts anytime, anywhere
       </Text>
 
       <TouchableOpacity
-        style={styles.button}
+        style={[styles.button, {backgroundColor: theme.buttonBackground}]}
         onPress= {() => router.push('/notes')}
       >
-      <Text style = {styles.buttonText}>Get Started</Text>
+      <Text style = {[styles.buttonText, {color: theme.buttonText}]}>Get Started</Text>
       </TouchableOpacity>
     </View>
   );
@@ -47,7 +49,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     padding: 20,
-    backgroundColor: '#f8f9fa'
   },
   image: {
     width: 100,
@@ -58,24 +59,20 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: "bold",
-    color: "#333",
     marginBottom: 10,
   },
   subtitle: {
     fontSize: 16,
-    color: "#666",
     textAlign: "center",
     marginBottom: 20,
   },
   button: {
-    backgroundColor: "#007bff",
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 8,
     alignItems: "center",
   },
   buttonText: {
-    color: "#fff",
     fontSize: 18,
     fontWeight: "bold",
   },

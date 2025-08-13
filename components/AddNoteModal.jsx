@@ -1,4 +1,5 @@
 ﻿import TaskList from '@/components/TaskList';
+import { useTheme } from '@/contexts/ThemeContext'; // 🔧
 import tagService from '@/services/tagService';
 import { parseTasksFromText, serializeTasksToText } from '@/services/taskUtils';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -6,7 +7,6 @@ import * as Notifications from 'expo-notifications';
 import { useEffect, useState } from 'react';
 import { Modal, Platform, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SvgXml } from 'react-native-svg';
-
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -27,6 +27,8 @@ const AddNoteModal = ({
   setSelectedTags,
   drawingSvg,
 }) => {
+  const { theme } = useTheme(); // 🔧
+
   const [tagInput, setTagInput] = useState('');
   const [allTags, setAllTags] = useState([]);
   const [reminderEnabled, setReminderEnabled] = useState(false);
@@ -35,32 +37,28 @@ const AddNoteModal = ({
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [tasks, setTasks] = useState([]);
 
-useEffect(() => {
-  const setup = async () => {
-    const { status } = await Notifications.requestPermissionsAsync();
-    if (status !== 'granted') {
-      alert('Notifications permission not granted');
-    }
-  };
-
-
-
-
-  const fetchTags = async () => {
-    if (user) {
-      const response = await tagService.getTags(user.$id);
-      if (!response.error) {
-        setAllTags(response.data.map(tag => tag.name));
+  useEffect(() => {
+    const setup = async () => {
+      const { status } = await Notifications.requestPermissionsAsync();
+      if (status !== 'granted') {
+        alert('Notifications permission not granted');
       }
+    };
+
+    const fetchTags = async () => {
+      if (user) {
+        const response = await tagService.getTags(user.$id);
+        if (!response.error) {
+          setAllTags(response.data.map(tag => tag.name));
+        }
+      }
+    };
+
+    if (modalVisible) {
+      setup();
+      fetchTags();
     }
-  };
-
-  if (modalVisible) {
-    setup();
-    fetchTags();
-  }
-}, [modalVisible, user]);
-
+  }, [modalVisible, user]);
 
   useEffect(() => {
     if (modalVisible) {
@@ -68,7 +66,6 @@ useEffect(() => {
       setTasks(parsed);
     }
   }, [modalVisible, newNote]);
-
 
   const filteredSuggestions = allTags.filter(
     tag =>
@@ -78,43 +75,32 @@ useEffect(() => {
 
   const toggleReminder = (value) => {
     setReminderEnabled(value);
-    if (!value) {
-      setDate(null); // o puedes usar un estado separado si manejas recordatorio con más detalle
-    } else {
-      const now = new Date();
-    setDate(now);
-    }
+    setDate(value ? new Date() : null);
   };
 
   const onChangeDate = (event, selectedDate) => {
     setShowDatePicker(Platform.OS === 'ios');
     if (selectedDate) {
-      setDate((prevDate) => {
-        const newDate = new Date(
-          selectedDate.getFullYear(),
-          selectedDate.getMonth(),
-          selectedDate.getDate(),
-          prevDate?.getHours() || 0,
-          prevDate?.getMinutes() || 0
-        );
-        return newDate;
-      });
+      setDate(prev => new Date(
+        selectedDate.getFullYear(),
+        selectedDate.getMonth(),
+        selectedDate.getDate(),
+        prev?.getHours() || 0,
+        prev?.getMinutes() || 0
+      ));
     }
   };
 
   const onChangeTime = (event, selectedTime) => {
     setShowTimePicker(Platform.OS === 'ios');
     if (selectedTime) {
-      setDate((prevDate) => {
-        const newDate = new Date(
-          prevDate?.getFullYear() || new Date().getFullYear(),
-          prevDate?.getMonth() || new Date().getMonth(),
-          prevDate?.getDate() || new Date().getDate(),
-          selectedTime.getHours(),
-          selectedTime.getMinutes()
-        );
-        return newDate;
-      });
+      setDate(prev => new Date(
+        prev?.getFullYear() || new Date().getFullYear(),
+        prev?.getMonth() || new Date().getMonth(),
+        prev?.getDate() || new Date().getDate(),
+        selectedTime.getHours(),
+        selectedTime.getMinutes()
+      ));
     }
   };
 
@@ -135,13 +121,8 @@ useEffect(() => {
 
   const handleTasksChange = (updatedTasks) => {
     setTasks(updatedTasks);
-    const updatedText = serializeTasksToText(updatedTasks);
-    setNewNote(updatedText);
+    setNewNote(serializeTasksToText(updatedTasks));
   };
-
-
-
-
 
   return (
     <Modal
@@ -150,9 +131,9 @@ useEffect(() => {
       transparent
       onRequestClose={() => setModalVisible(false)}
     >
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
-          <Text style={styles.modalTitle}>Add a New Note</Text>
+      <View style={[styles.modalOverlay, { backgroundColor: theme.modalOverlay || 'rgba(0,0,0,0.5)' }]}>
+        <View style={[styles.modalContent, { backgroundColor: theme.modalBackground }]}>
+          <Text style={[styles.modalTitle, { color: theme.text }]}>Add a New Note</Text>
 
           <TaskList
             noteId={null}
@@ -161,17 +142,25 @@ useEffect(() => {
           />
 
           <TextInput
-            style={styles.input}
+            style={[styles.input, {
+              backgroundColor: theme.inputBackground,
+              color: theme.text,
+              borderColor: theme.text === '#FFFFFF' ? '#555' : '#ccc',
+            }]}
             placeholder='Enter note...'
-            placeholderTextColor='#aaa'
+            placeholderTextColor={theme.text === '#FFFFFF' ? '#aaa' : '#666'}
             value={newNote}
             onChangeText={setNewNote}
           />
 
-          {/* Tag input */}
           <TextInput
-            style={styles.input}
+            style={[styles.input, {
+              backgroundColor: theme.inputBackground,
+              color: theme.text,
+              borderColor: theme.text === '#FFFFFF' ? '#555' : '#ccc',
+            }]}
             placeholder="Add tag and press enter"
+            placeholderTextColor={theme.text === '#FFFFFF' ? '#aaa' : '#666'}
             value={tagInput}
             onChangeText={setTagInput}
             onSubmitEditing={() => {
@@ -182,7 +171,6 @@ useEffect(() => {
             }}
           />
 
-          {/* Suggestions */}
           {filteredSuggestions.length > 0 && (
             <View>
               {filteredSuggestions.map((tag, index) => (
@@ -193,17 +181,16 @@ useEffect(() => {
                     setTagInput('');
                   }}
                 >
-                  <Text style={styles.suggestion}>#{tag}</Text>
+                  <Text style={[styles.suggestion, { color: theme.text }]}>#{tag}</Text>
                 </TouchableOpacity>
               ))}
             </View>
           )}
 
-          {/* Selected tags */}
           <View style={styles.tagsContainer}>
             {selectedTags.map((tag, index) => (
-              <View key={index} style={styles.tag}>
-                <Text>#{tag}</Text>
+              <View key={index} style={[styles.tag, { backgroundColor: theme.inputBackground }]}>
+                <Text style={{ color: theme.text }}>#{tag}</Text>
                 <TouchableOpacity
                   onPress={() =>
                     setSelectedTags(selectedTags.filter((t) => t !== tag))
@@ -216,69 +203,72 @@ useEffect(() => {
           </View>
 
           <View style={styles.reminderRow}>
-            <Text style={styles.reminderLabel}>Reminder</Text>
+            <Text style={[styles.reminderLabel, { color: theme.text }]}>Reminder</Text>
             <Switch value={reminderEnabled} onValueChange={toggleReminder} />
           </View>
 
           {reminderEnabled && (
             <>
-              <TouchableOpacity onPress={() => setShowDatePicker(true)} style={styles.datetimeButton}>
-                <Text>Select Date: {date?.toLocaleDateString()}</Text>
+              <TouchableOpacity onPress={() => setShowDatePicker(true)} style={[styles.datetimeButton, { backgroundColor: theme.inputBackground }]}>
+                <Text style={{ color: theme.text }}>
+                  Select Date: {date?.toLocaleDateString()}
+                </Text>
               </TouchableOpacity>
 
-              <TouchableOpacity onPress={() => setShowTimePicker(true)} style={styles.datetimeButton}>
-                <Text>Select Time: {date?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
+              <TouchableOpacity onPress={() => setShowTimePicker(true)} style={[styles.datetimeButton, { backgroundColor: theme.inputBackground }]}>
+                <Text style={{ color: theme.text }}>
+                  Select Time: {date?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </Text>
               </TouchableOpacity>
-          </>
-        )}
+            </>
+          )}
 
-        {showDatePicker && (
-          <DateTimePicker
-            value={date || new Date()}
-            mode="date"
-            display="default"
-            onChange={onChangeDate}
-            minimumDate={new Date()}
-        />
-      )}
+          {showDatePicker && (
+            <DateTimePicker
+              value={date || new Date()}
+              mode="date"
+              display="default"
+              onChange={onChangeDate}
+              minimumDate={new Date()}
+            />
+          )}
 
-      {showTimePicker && (
-        <DateTimePicker
-          value={date || new Date()}
-          mode="time"
-          display="default"
-          onChange={onChangeTime}
-        />
-      )}
+          {showTimePicker && (
+            <DateTimePicker
+              value={date || new Date()}
+              mode="time"
+              display="default"
+              onChange={onChangeTime}
+            />
+          )}
 
-      {drawingSvg && (
-        <View style={styles.drawingPreview}>
-          <SvgXml xml={drawingSvg} width="100%" height="100%" />
-        </View>
-      )}
+          {drawingSvg && (
+            <View style={styles.drawingPreview}>
+              <SvgXml xml={drawingSvg} width="100%" height="100%" />
+            </View>
+          )}
 
-          {/* Buttons */}
           <View style={styles.modalButtons}>
-            <TouchableOpacity style={styles.cancelButton} onPress={() => setModalVisible(false)}>
-              <Text style={styles.cancelButtonText}>Cancel</Text>
+            <TouchableOpacity style={[styles.cancelButton, { backgroundColor: theme.inputBackground }]} onPress={() => setModalVisible(false)}>
+              <Text style={[styles.cancelButtonText, { color: theme.text }]}>Cancel</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={styles.saveButton}
+              style={[styles.saveButton, { backgroundColor: theme.primary }]}
               onPress={() => {
                 if (reminderEnabled && date) {
                   programNotification(date);
                 }
                 addNote(date);
-                setModalVisible(false); // Cierra modal después de guardar
+                setModalVisible(false);
               }}
             >
-          <Text style={styles.saveButtonText}>Save</Text>
-        </TouchableOpacity>
+              <Text style={styles.saveButtonText}>Save</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </View>
     </Modal>
-  ); 
+  );
 }; 
 
 const styles = StyleSheet.create({
@@ -286,11 +276,9 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContent: {
     width: '90%',
-    backgroundColor: '#fff',
     borderRadius: 10,
     padding: 20,
   },
@@ -301,7 +289,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   input: {
-    borderColor: '#ccc',
     borderWidth: 1,
     borderRadius: 8,
     padding: 10,

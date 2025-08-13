@@ -1,4 +1,5 @@
 ﻿//import TaskList from '@/components/TaskList'; import sin usar
+import { useTheme } from '@/contexts/ThemeContext';
 import { parseTasksFromText } from '@/services/taskUtils';
 import { useEffect, useRef, useState } from 'react';
 import { Image, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -20,6 +21,8 @@ const NoteItem = ({ note, onDelete, onEdit }) => {
     const inputRef = useRef(null);
     
     const [tasks, setTasks] = useState(note.tasks || parseTasksFromText(note.text));
+
+    const { theme } = useTheme();
 
     useEffect(() => {
       setTasks(note.tasks || parseTasksFromText(note.text));
@@ -55,7 +58,10 @@ const NoteItem = ({ note, onDelete, onEdit }) => {
     };
 
 
-    return (<View style={styles.noteItem}>
+    return (<View style={[styles.noteItem, {
+        backgroundColor: theme.cardBackground,
+        borderColor: theme.text === '#FFFFFF' ? '#333' : '#eee'
+    }]}>
             <TouchableOpacity
                 style={{ flex: 1 }}
                 onPress={() => setExpanded(!expanded)}
@@ -169,7 +175,7 @@ const NoteItem = ({ note, onDelete, onEdit }) => {
     ) : null}
 
     
-    <Text style={styles.noteText}>
+    <Text style={[styles.noteText, {color: theme.text}]}>
         {expanded ? note.text : note.text.split('\n')[0]}
     </Text>
 
@@ -234,7 +240,6 @@ const styles = StyleSheet.create({
         padding: 15,
         marginVertical: 5,
         borderRadius: 5,
-        backgroundColor: '#f5f5f5',
     },
     noteImage: {
         width: 100,
