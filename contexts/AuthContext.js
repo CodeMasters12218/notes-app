@@ -46,8 +46,16 @@ export const AuthProvider = ({ children }) => {
         await checkUser(); // Refresh user state
     };
 
+    const resetPassword = async (email) => {
+        const response = await authService.resetPassword(email);
+        if (response?.error) {
+            return response;
+        }
+        return { success: true };
+    }
+
     return (
-        <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+        <AuthContext.Provider value={{ user, loading, login, register, logout, resetPassword }}>
             {children}
         </AuthContext.Provider>
     );

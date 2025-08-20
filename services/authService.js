@@ -48,6 +48,15 @@ const authService = {
         } catch (error) {
             return { error: error.message || 'Logout failed. Please try again' };
         }
+    },
+
+    async resetPassword(email) {
+        try {
+            await account.createRecovery(email, "notesapp://reset");
+            return { success: true };
+        } catch (err) {
+            return { error: err.message };
+        }
     }
 };    
 
