@@ -52,10 +52,23 @@ export const AuthProvider = ({ children }) => {
             return response;
         }
         return { success: true };
-    }
+    };
+
+    const deleteAccount = async () => {
+        if (!user) return { error: "No user logged in" };
+
+        const response = await authService.deleteAccountAndNotes(user.$id);
+        if (response?.error) {
+            return response;
+        }
+
+        setUser(null);
+        return { success: true };
+    };
+
 
     return (
-        <AuthContext.Provider value={{ user, loading, login, register, logout, resetPassword }}>
+        <AuthContext.Provider value={{ user, loading, login, register, logout, resetPassword, deleteAccount }}>
             {children}
         </AuthContext.Provider>
     );

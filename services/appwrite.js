@@ -1,5 +1,5 @@
 ﻿import { Platform } from 'react-native';
-import { Account, Client, Databases, Storage } from 'react-native-appwrite';
+import { Account, Client, Databases, Functions, Storage } from 'react-native-appwrite';
 
 
 const config = {
@@ -28,7 +28,9 @@ const database = new Databases(client);
 
 const account = new Account(client);
 
-const storage = new Storage(client);    
+const storage = new Storage(client);  
 
-export { account, client, config, database, storage };
+const functions = new Functions(client);
+
+export { account, client, config, database, functions, storage };
 

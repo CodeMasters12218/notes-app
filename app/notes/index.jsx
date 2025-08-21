@@ -448,6 +448,16 @@ const NoteScreen = () => {
         </TouchableOpacity>
     </View>
 
+    <View style={{ position: 'absolute', bottom: 140, right: 20, left: 20 }}>
+        <TouchableOpacity 
+            style={[styles.addButton, { backgroundColor: '#6c757d' }]} 
+            onPress={() => router.push('/profile')}
+        >
+        <Text style={styles.addButtonText}>Go to Profile</Text>
+        </TouchableOpacity>
+    </View>
+
+
     <TouchableOpacity style={[styles.addButton, {backgroundColor: theme.buttonBackground}]} onPress={() => setMenuVisible(true)}>
         <Text style={[styles.addButtonText, {color: theme.buttonText}]}>+ Add Note</Text>
     </TouchableOpacity>

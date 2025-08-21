@@ -1,5 +1,9 @@
 ﻿import { ID } from 'react-native-appwrite';
-import { account } from './appwrite';
+import { account, functions } from './appwrite';
+const DATABASE_ID = process.env.EXPO_PUBLIC_APPWRITE_DB_ID;
+const NOTES_COLLECTION_ID = process.env.EXPO_PUBLIC_APPWRITE_COL_NOTES_ID;
+const DELETE_USER_FUNCTION_ID = process.env.EXPO_PUBLIC_APPWRITE_FUNCTION_DELETE_USER_ID;
+
 
 const authService = {
     // Register a new user
@@ -55,6 +59,30 @@ const authService = {
             await account.createRecovery(email, "notesapp://reset");
             return { success: true };
         } catch (err) {
+            return { error: err.message };
+        }
+    },
+
+    async deleteAccountAndNotes(userId) {
+        try {
+            const execution = await functions.createExecution(
+                DELETE_USER_FUNCTION_ID,
+                JSON.stringify({
+                    userId,
+                    databaseId: DATABASE_ID,
+                    collectionId: NOTES_COLLECTION_ID,
+            })
+        );
+
+        console.log("📝 Function output:", execution);
+
+        if (execution.status !== "completed") {
+            throw new Error(execution.response || "Function failed");
+        }
+
+        return { success: true };
+        } catch (err) {
+            console.error("❌ Error in deleteAccountAndNotes:", err);
             return { error: err.message };
         }
     }
