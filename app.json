@@ -54,7 +54,8 @@
         {
           "microphonePermission": "This app uses the microphone to record audio."
         }
-      ]
+      ],
+      "expo-localization"
     ],
     "experiments": {
       "typedRoutes": true

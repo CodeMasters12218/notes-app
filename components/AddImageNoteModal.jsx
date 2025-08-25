@@ -1,8 +1,10 @@
 ﻿import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Image, Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 const AddImageNoteModal = ({ visible, imageUri, onSave, onCancel }) => {
   const [noteText, setNoteText] = useState('');
+  const { t } = useTranslation();
 
   const handleSave = () => {
     onSave(noteText.trim(), imageUri);
@@ -23,7 +25,7 @@ const AddImageNoteModal = ({ visible, imageUri, onSave, onCancel }) => {
     >
       <View style={styles.overlay}>
         <View style={styles.container}>
-          <Text style={styles.title}>New note with image</Text>
+          <Text style={styles.title}>{t('noteWithImagetitle')}</Text>
 
           {imageUri && (
             <Image source={{ uri: imageUri }} style={styles.image} resizeMode="cover" />
@@ -31,7 +33,7 @@ const AddImageNoteModal = ({ visible, imageUri, onSave, onCancel }) => {
 
           <TextInput
             style={styles.input}
-            placeholder="Write your note here..."
+            placeholder={t('noteWritePlaceholder')}
             multiline
             value={noteText}
             onChangeText={setNoteText}
@@ -39,11 +41,11 @@ const AddImageNoteModal = ({ visible, imageUri, onSave, onCancel }) => {
 
           <View style={styles.buttonRow}>
             <TouchableOpacity style={[styles.button, styles.cancelButton]} onPress={handleCancel}>
-              <Text style={styles.buttonText}>Cancel</Text>
+              <Text style={styles.buttonText}>{t('cancelButton')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={[styles.button, styles.saveButton]} onPress={handleSave}>
-              <Text style={styles.buttonText}>Save</Text>
+              <Text style={styles.buttonText}>{t('saveButton')}</Text>
             </TouchableOpacity>
           </View>
         </View>

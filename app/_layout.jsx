@@ -1,24 +1,31 @@
+// app/_layout.jsx
 import * as Notifications from "expo-notifications";
 import { Stack } from "expo-router";
 import React, { useEffect } from "react";
-import { StyleSheet, Text, TouchableOpacity, useColorScheme } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, useColorScheme, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
-import { ThemeProvider } from "@/contexts/ThemeContext"; // Ajusta ruta si es necesario
+import { ThemeProvider } from "@/contexts/ThemeContext";
+import "@/i18n"; // importa la config de i18n
 
-const HeaderLogout = () => {
+// Botón de logout en el header
+function HeaderLogout() {
   const { user, logout } = useAuth();
 
-  return user ? (
+  if (!user) return null;
+
+  return (
     <TouchableOpacity style={styles.logoutButton} onPress={logout}>
       <Text style={styles.logoutText}>Logout</Text>
     </TouchableOpacity>
-  ) : null;
-};
+  );
+}
 
-const RootLayout = () => {
+// Layout raíz
+export default function RootLayout() {
   const colorScheme = useColorScheme();
+
   useEffect(() => {
     (async () => {
       const { status } = await Notifications.requestPermissionsAsync();
@@ -32,34 +39,36 @@ const RootLayout = () => {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemeProvider>
         <AuthProvider>
-          <Stack
-            screenOptions={{
-              headerStyle: {
-                backgroundColor: colorScheme === 'dark' ? '#1c1c1e' : '#ff8c00',
-              },
-              headerTintColor: colorScheme === 'dark' ? '#ffffff' : '#ffffff',
-              headerTitleStyle: {
-                fontSize: 20,
-                fontWeight: "bold",
-              },
-              headerRight: () => <HeaderLogout />,
-              contentStyle: {
-                paddingHorizontal: 10,
-                paddingTop: 10,
-                backgroundColor: "#fff",
-              },
-            }}
-          >
-            <Stack.Screen name="index" options={{ title: "Home" }} />
-            <Stack.Screen name="notes" options={{ headerTitle: "Notes" }} />
-            <Stack.Screen name="auth" options={{ headerTitle: "Login" }} />
-            <Stack.Screen name="drawscreen" options={{ headerTitle: "Draw Screen" }} />
-          </Stack>
+          <View style={{ flex: 1 }}>
+            <Stack
+              screenOptions={{
+                headerStyle: {
+                  backgroundColor: colorScheme === "dark" ? "#1c1c1e" : "#ff8c00",
+                },
+                headerTintColor: "#ffffff",
+                headerTitleStyle: {
+                  fontSize: 20,
+                  fontWeight: "bold",
+                },
+                headerRight: () => <HeaderLogout />,
+                contentStyle: {
+                  paddingHorizontal: 10,
+                  paddingTop: 10,
+                  backgroundColor: "#fff",
+                },
+              }}
+            >
+              <Stack.Screen name="index" options={{ title: "Home" }} />
+              <Stack.Screen name="notes" options={{ headerTitle: "Notes" }} />
+              <Stack.Screen name="auth" options={{ headerTitle: "Login" }} />
+              <Stack.Screen name="drawscreen" options={{ headerTitle: "Draw Screen" }} />
+            </Stack>
+          </View>
         </AuthProvider>
       </ThemeProvider>
     </GestureHandlerRootView>
   );
-};
+}
 
 const styles = StyleSheet.create({
   logoutButton: {
@@ -75,5 +84,3 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
 });
-
-export default RootLayout;

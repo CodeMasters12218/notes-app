@@ -1,11 +1,13 @@
 ﻿import { useRouter, useSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Alert, Button, StyleSheet, Text, TextInput, View } from 'react-native';
 import { account } from '../../services/appwrite';
 
 export default function ResetPasswordScreen() {
   const router = useRouter();
   const { userId, secret, expire } = useSearchParams();
+  const { t } = useTranslation();
 
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -13,32 +15,28 @@ export default function ResetPasswordScreen() {
 
   useEffect(() => {
     if (!userId || !secret || !expire) {
-      Alert.alert('Error', 'The link to reset your password is invalid or has expired');
+      Alert.alert(t('error'), t('invalidResetLink'));
     }
   }, [userId, secret, expire]);
 
   const handleReset = async () => {
     if (password !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match');
+      Alert.alert(t('error'), t('passwordnotMatch'));
       return;
     }
     if (!password) {
-      Alert.alert('Error', 'Please enter a valid password');
+      Alert.alert(t('error'), t('validPasswordRequired'));
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      await account.updateRecovery(
-        userId,
-        secret,
-        password,
-      );
-      Alert.alert('Success', 'Password has been reset successfully');
-      router.push('/auth');  // <-- Aquí rediriges a la pantalla login
+      await account.updateRecovery(userId, secret, password);
+      Alert.alert(t('success'), t('passwordResetSuccess'));
+      router.push('/auth');
     } catch (error) {
-      Alert.alert('Error', error.message || 'Password could not be reset. Please try again');
+      Alert.alert(t('error'), error.message || t('passwordResetError'));
     } finally {
       setIsSubmitting(false);
     }
@@ -46,22 +44,26 @@ export default function ResetPasswordScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Reset password</Text>
+      <Text style={styles.title}>{t('resetPassword')}</Text>
       <TextInput
-        placeholder="New password"
+        placeholder={t('newPassword')}
         secureTextEntry
         value={password}
         onChangeText={setPassword}
         style={styles.input}
       />
       <TextInput
-        placeholder="Confirm new password"
+        placeholder={t('confirmNewPassword')}
         secureTextEntry
         value={confirmPassword}
         onChangeText={setConfirmPassword}
         style={styles.input}
       />
-      <Button title={isSubmitting ? 'Loading...' : 'Reset'} onPress={handleReset} disabled={isSubmitting} />
+      <Button 
+        title={isSubmitting ? t('loading') : t('reset')} 
+        onPress={handleReset} 
+        disabled={isSubmitting} 
+      />
     </View>
   );
 }

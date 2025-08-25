@@ -11,13 +11,14 @@ import noteService from '@/services/noteService';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-
 
 const NoteScreen = () => {
     const router = useRouter();
     const { user, loading: authLoading } = useAuth();
     const { theme } = useTheme();
+    const { t } = useTranslation();
     
     const [notes, setNotes] = useState([]);
     const [modalVisible, setModalVisible] = useState(false); 
@@ -39,54 +40,27 @@ const NoteScreen = () => {
     const [audioUri, setAudioUri] = useState(null);
     const [drawingSvg, setDrawingSvg] = useState(null); 
 
-
-
-
     useEffect(() => { 
         if (!authLoading && !user) {
             router.replace('/auth');
         }
     }, [user, authLoading]);
         
-
     useEffect(() => { 
         if (user) {
             fetchNotes();
         }
     }, [user]);
 
-
-    /*
     useEffect(() => {
         const fetchTags = async () => {
-            const response = await tagService.getTags(user.$id);
-            if (!response.error) setAllTags(response.data.map(tag => tag.name));
+            if (user) {
+                const response = await tagService.getTags(user.$id);
+                if (!response.error) setAllTags(response.data.map(tag => tag.name));
+            }
         };
-        if (user) fetchTags();
-    }, [modalVisible]);
-    */
-
-    useEffect(() => {
-        const fetchTags = async () => {
-        if (user) {
-            const response = await tagService.getTags(user.$id);
-            if (!response.error) setAllTags(response.data.map(tag => tag.name));
-        }
-    };
-    fetchTags();
+        fetchTags();
     }, [user]);
-
-
-    useEffect(() => {
-        const getDrawing = async () => {
-        const svg = await AsyncStorage.getItem('lastDrawing');
-        if (svg) {
-            setDrawingSvg(svg);
-            AsyncStorage.removeItem('lastDrawing');
-        }
-    };
-    getDrawing();
-}, []);
 
     const fetchNotes = async () => {
         setLoading(true);
@@ -94,9 +68,8 @@ const NoteScreen = () => {
 
         if(response.error) {
             setError(response.error);
-            Alert.alert('Error', response.error);
+            Alert.alert(t('error'), response.error);
         } else {
-            // Garantizar que tags sea un array
             const notesWithTags = response.data.map(note => ({
                 ...note,
                 tags: Array.isArray(note.tags) ? note.tags : [],
@@ -106,18 +79,12 @@ const NoteScreen = () => {
             setNotes(notesWithTags);
             setError(null);
         }
-
         setLoading(false);
     }    
 
-
-    
-    // Add a new note
-
     const handleAddNote = async () => {
-
         if(newNote.trim() === '' && !drawingSvg) {
-            Alert.alert('Error', 'Note text cannot be empty');
+            Alert.alert(t('error'), t('noteCannotBeEmpty'));
             return;
         }
 
@@ -134,98 +101,54 @@ const NoteScreen = () => {
         console.log("[NoteScreen] Response de addNote:", response);
 
         if (response.error) {
-            Alert.alert('Error', response.error);
+            Alert.alert(t('error'), response.error);
             return;
         }
 
         setNotes([...notes, response.data]);
-
-        // Limpiar estados
         setNewNote('');
         setSelectedTags([]);
         setReminderAt(null);
         setDrawingSvg(null);
         setModalVisible(false);
         setAudioUri(null);
-        setImageToAdd(null); // Asegúrate de limpiar esto también si estás usando imágenes
+        setImageToAdd(null);
     };
-
-    
-    /*
-    const addNote = async () => {
-        console.log("Local addNote definido aquí:", addNote.toString());
-        if(newNote.trim() === '' && !drawingSvg) {
-            Alert.alert('Error', 'Note text cannot be empty');
-            return;
-
-        }
-
-        console.log("IMPORT noteService ES:", noteService);
-        console.log("IMPORT KEYS:", Object.keys(noteService));
-        console.log("addNote === noteService.addNote:", addNote === noteService.addNote);
-        console.log("Trying to add note...");
-        console.log("noteService.addNote is:", noteService.addNote);
-        console.log("typeof noteService.addNote:", typeof noteService.addNote);
-        console.log("Llamando a addNote ahora...");
-        const response = await noteService.addNote(user.$id, newNote, selectedTags, reminderAt, imageUri, audioUri, drawingSvg);  
-        console.log("Volvió de addNote");
-        console.log("Response from addNote:", response);
-
-        if (response.error) {
-            console.error("Error adding note:", response.error);
-            Alert.alert('Error', response.error);
-            return;
-        } else {
-            console.log("Note added successfully:", response.data);
-            setNotes([...notes, response.data]);
-        }
-
-        setNewNote('');
-        setSelectedTags([]);
-        setReminderAt(null);
-        setDrawingSvg(null);
-        setModalVisible(false);
-    };
-    */
-
-    // Delete a note
 
     const deleteNote = async (id) => {
-        Alert.alert('Move to Trash', 'Are you sure do you want to move this note to the trash?', [
+        Alert.alert(t('trashMove'), t('trashMoveText'), [
             {
-            text: 'Cancel',
-            style: 'cancel',
+                text: t('cancelButton'),
+                style: 'cancel',
             },
             {
-            text: 'Move',
-            style: 'destructive',
-            onPress: async () => {
-                const response = await noteService.moveToTrash(id);
-                if (response.error) {
-                    Alert.alert('Error', response.error);
-                } else {
-                    setNotes(notes.filter((note) => note.$id !== id));
+                text: t('moveButton'),
+                style: 'destructive',
+                onPress: async () => {
+                    const response = await noteService.moveToTrash(id);
+                    if (response.error) {
+                        Alert.alert(t('error'), response.error);
+                    } else {
+                        setNotes(notes.filter((note) => note.$id !== id));
+                    }
                 }
             }
-            
-        }])
+        ]);
     }    
-
-    // Edit a note
 
     const editNote = async (id, newText, reminderAt = null) => {
         if(!newText.trim()) {
-            Alert.alert('Error', 'Note text cannot be empty');
+            Alert.alert(t('error'), t('noteCannotBeEmpty'));
             return;
         }
         const response = await noteService.updateNote(id, {text: newText, reminderAt, tasks: parseTasksFromText(newText)});
 
         if (response.error) {
-            Alert.alert('Error', response.error);
+            Alert.alert(t('error'), response.error);
             return;
         } else {
             setNotes((prevNotes) => prevNotes.map((note) => note.$id === id ?
-        {...note, text: response.data.text, reminderAt: response.data.reminderAt} : note));
+                {...note, text: response.data.text, reminderAt: response.data.reminderAt} : note));
         }
     };
 
@@ -233,33 +156,27 @@ const NoteScreen = () => {
         const response = await noteService.restoreNote(id);
 
         if (response.error) {
-            Alert.alert('Error', response.error);
+            Alert.alert(t('error'), response.error);
         } else {
-            // Opcional: actualizar el estado para remover la nota restaurada de la papelera
             setNotes((prevNotes) => prevNotes.filter(note => note.$id !== id));
-            Alert.alert('Restored', 'The note has been restored.');
+            Alert.alert(t('restored'), t('noteHasBeenRestored'));
         }
     };
-
 
     const filteredNotes = notes.filter(note => {
         const matchesText = note.text.toLowerCase().includes(searchText.toLowerCase());
         const matchesTags = filterTags.length === 0 || filterTags.every(tag => note.tags?.includes(tag));
-
         return matchesText && matchesTags;
     });
 
     const filteredSuggestions = allTags.filter(
-    tag =>
-        tag.toLowerCase().includes(tagInput.toLowerCase()) &&
-        !selectedTags.includes(tag)
+        tag => tag.toLowerCase().includes(tagInput.toLowerCase()) && !selectedTags.includes(tag)
     );
-
 
     const pickImageFromLibrary = async () => {
         const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (status !== 'granted') {
-            Alert.alert('Access denied', 'You need to grant permission to access the gallery');
+            Alert.alert(t('accessDenied'), t('galleryPermission'));
             return;
         }
 
@@ -279,7 +196,7 @@ const NoteScreen = () => {
     const pickImageFromCamera = async () => {
         const { status } = await ImagePicker.requestCameraPermissionsAsync();
         if (status !== 'granted') {
-            Alert.alert('Access denied', 'You need to grant permission to access the camera');
+            Alert.alert(t('accessDenied'), t('cameraPermission'));
             return;
         }
 
@@ -300,7 +217,7 @@ const NoteScreen = () => {
         const response = await noteService.addNote(user.$id, text, [], null, imageUri);
 
         if (response.error) {
-            Alert.alert('Error', response.error);
+            Alert.alert(t('error'), response.error);
             return;
         }
 
@@ -309,209 +226,195 @@ const NoteScreen = () => {
         setImageNoteModalVisible(false);
     };
 
-    /*
-    const openDrawScreen = () => {
-        const callbackKey = `callback_${Date.now()}`;
-        router.push({
-            pathname: "/drawscreen",
-        params: { callbackKey }
-        });
-    };
-    */
-
     const openDrawScreen = () => {
         router.push("/drawscreen");
     };
 
     return (
         <View style={[styles.container, {backgroundColor: theme.background}]}>
-            { loading ? (
-                <ActivityIndicator size="large" color="#007bff" /> 
+            {loading ? (
+                <ActivityIndicator size="large" color={theme.primary} /> 
             ) : (
                 <>
-                    {error && <Text style={styles.errorText}>{error}</Text>}
+                    {error && <Text style={[styles.errorText, {color: theme.error}]}>{error}</Text>}
 
                     <TextInput 
                         style={[styles.searchInput, { 
                             backgroundColor: theme.inputBackground,
-                            color: theme.text 
-                    }]}
-                        placeholder="Search notes..."
+                            color: theme.text,
+                            borderColor: theme.border
+                        }]}
+                        placeholder={t('notesSearch')}
                         placeholderTextColor={theme.text === '#FFFFFF' ? '#aaa' : '#666'}
                         value={searchText}
                         onChangeText={setSearchText}
                         autoCorrect={false}
                         autoCapitalize="none"
-                        clearButtonMode="while-editing"
                     />
 
                     <TextInput
-                        placeholder="Add tag and press enter"
+                        style={[styles.input, {
+                            backgroundColor: theme.inputBackground,
+                            color: theme.text,
+                            borderColor: theme.border
+                        }]}
+                        placeholder={t('addTag')}
+                        placeholderTextColor={theme.text === '#FFFFFF' ? '#aaa' : '#666'}
                         value={tagInput}
                         onChangeText={setTagInput}
                         onSubmitEditing={() => {
                             if (tagInput.trim() !== '' && !selectedTags.includes(tagInput.trim())) {
                                 setSelectedTags([...selectedTags, tagInput.trim()]);
                             }
-                        setTagInput('');
+                            setTagInput('');
                         }}
                     />
 
                     <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: 12 }}>
-                    {allTags.map(tag => {
-                        const isSelected = filterTags.includes(tag);
-                        return (
-                            <TouchableOpacity
-                                key={tag}
-                                onPress={() => {
-                                    if (isSelected) {
-                                        setFilterTags(filterTags.filter(t => t !== tag));
-                                    } else {
-                                        setFilterTags([...filterTags, tag]);
-                                    }
-                                }}
-                            style={{
-                                paddingVertical: 6,
-                                paddingHorizontal: 12,
-                                margin: 4,
-                                borderRadius: 16,
-                                backgroundColor: isSelected ? '#007bff' : '#eee',
-                            }}
-                        >
-        <Text style={{ color: isSelected ? 'white' : 'black' }}>#{tag}</Text>
-      </TouchableOpacity>
-    );
-  })}
-</View>
-
+                        {allTags.map(tag => {
+                            const isSelected = filterTags.includes(tag);
+                            return (
+                                <TouchableOpacity
+                                    key={tag}
+                                    onPress={() => {
+                                        if (isSelected) {
+                                            setFilterTags(filterTags.filter(t => t !== tag));
+                                        } else {
+                                            setFilterTags([...filterTags, tag]);
+                                        }
+                                    }}
+                                    style={{
+                                        paddingVertical: 6,
+                                        paddingHorizontal: 12,
+                                        margin: 4,
+                                        borderRadius: 16,
+                                        backgroundColor: isSelected ? theme.primary : theme.tagBackground,
+                                    }}
+                                >
+                                    <Text style={{ color: isSelected ? 'white' : theme.text }}>#{tag}</Text>
+                                </TouchableOpacity>
+                            );
+                        })}
+                    </View>
 
                     {filteredSuggestions.length > 0 && (
                         <View style={{ marginTop: 4 }}>
                             {filteredSuggestions.map((tag, index) => (
-                             <TouchableOpacity
-                                key={index}
-                                onPress={() => {
-                                    setSelectedTags([...selectedTags, tag]);
-                                    setTagInput('');
-                                }}
-                            >
-                        <Text style={{ padding: 8, backgroundColor: '#f0f0f0' }}>{tag}</Text>
-                    </TouchableOpacity>
-                ))}
-            </View>
-        )}
+                                <TouchableOpacity
+                                    key={index}
+                                    onPress={() => {
+                                        setSelectedTags([...selectedTags, tag]);
+                                        setTagInput('');
+                                    }}
+                                >
+                                    <Text style={{ padding: 8, backgroundColor: theme.tagBackground, color: theme.text }}>
+                                        {tag}
+                                    </Text>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+                    )}
 
                     <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginTop: 8 }}>
-                    {selectedTags.map((tag, index) => (
-                    <View
-                        key={index}
-                    style={{
-                        backgroundColor: '#eee',
-                        borderRadius: 16,
-                        paddingHorizontal: 12,
-                        paddingVertical: 4,
-                        margin: 4,
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                    }}
-                    >
-                    <Text>{tag}</Text>
-                    <TouchableOpacity
-                        onPress={() =>
-                            setSelectedTags(selectedTags.filter((t) => t !== tag))
-                        }
-                        style={{ marginLeft: 8 }}
-                    >
-                    <Text style={{ color: 'red' }}>✕</Text>
-                </TouchableOpacity>
-            </View>
-        ))}
-    </View>
-
+                        {selectedTags.map((tag, index) => (
+                            <View
+                                key={index}
+                                style={{
+                                    backgroundColor: theme.tagBackground,
+                                    borderRadius: 16,
+                                    paddingHorizontal: 12,
+                                    paddingVertical: 4,
+                                    margin: 4,
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                }}
+                            >
+                                <Text style={{color: theme.text}}>#{tag}</Text>
+                                <TouchableOpacity
+                                    onPress={() => setSelectedTags(selectedTags.filter((t) => t !== tag))}
+                                    style={{ marginLeft: 8 }}
+                                >
+                                    <Text style={{ color: theme.error }}>✕</Text>
+                                </TouchableOpacity>
+                            </View>
+                        ))}
+                    </View>
 
                     {notes.length === 0 ? (
-                        <Text style={styles.noNotesText}>You have no notes</Text>
+                        <Text style={[styles.noNotesText, {color: theme.text}]}>{t('noNotes')}</Text>
                     ) : filteredNotes.length === 0 && (searchText !== '' || filterTags.length > 0) ? (
-                        <Text style={styles.noNotesText}>No matching notes found</Text>
+                        <Text style={[styles.noNotesText, {color: theme.text}]}>{t('noMatchingNotes')}</Text>
                     ) : (
                         <NoteList notes={filteredNotes} onDelete={deleteNote} onEdit={editNote} />
                     )}
                 </>
             )}
     
-    <View style={{ position: 'absolute', bottom: 80, right: 20, left: 20 }}>
-        <TouchableOpacity 
-            style={[styles.addButton, { backgroundColor: '#dc3545' }]} 
-            onPress={() => router.push('/trash')}
-        >
-            <Text style={styles.addButtonText}>Go to Trash</Text>
-        </TouchableOpacity>
-    </View>
+            <View style={{ position: 'absolute', bottom: 80, right: 20, left: 20 }}>
+                <TouchableOpacity 
+                    style={[styles.addButton, { backgroundColor: theme.secondary }]} 
+                    onPress={() => router.push('/trash')}
+                >
+                    <Text style={[styles.addButtonText, {color: theme.buttonText}]}>{t('goToTrash')}</Text>
+                </TouchableOpacity>
+            </View>
 
-    <View style={{ position: 'absolute', bottom: 140, right: 20, left: 20 }}>
-        <TouchableOpacity 
-            style={[styles.addButton, { backgroundColor: '#6c757d' }]} 
-            onPress={() => router.push('/profile')}
-        >
-        <Text style={styles.addButtonText}>Go to Profile</Text>
-        </TouchableOpacity>
-    </View>
+            <View style={{ position: 'absolute', bottom: 140, right: 20, left: 20 }}>
+                <TouchableOpacity 
+                    style={[styles.addButton, { backgroundColor: theme.secondary }]} 
+                    onPress={() => router.push('/profile')}
+                >
+                    <Text style={[styles.addButtonText, {color: theme.buttonText}]}>{t('goToProfile')}</Text>
+                </TouchableOpacity>
+            </View>
 
+            <TouchableOpacity style={[styles.addButton, {backgroundColor: theme.primary}]} onPress={() => setMenuVisible(true)}>
+                <Text style={[styles.addButtonText, {color: theme.buttonText}]}>+ {t('addNote')}</Text>
+            </TouchableOpacity>
 
-    <TouchableOpacity style={[styles.addButton, {backgroundColor: theme.buttonBackground}]} onPress={() => setMenuVisible(true)}>
-        <Text style={[styles.addButtonText, {color: theme.buttonText}]}>+ Add Note</Text>
-    </TouchableOpacity>
+            <AddNoteModal 
+                modalVisible={modalVisible} 
+                setModalVisible={setModalVisible}
+                newNote={newNote}
+                setNewNote={setNewNote}
+                addNote={handleAddNote}
+                user={user}
+                selectedTags={selectedTags}
+                setSelectedTags={setSelectedTags}
+                reminderAt={reminderAt}
+                setReminderAt={setReminderAt}
+                drawingSvg={drawingSvg}
+            />   
 
+            <AddNoteMenuModal 
+                visible={menuVisible} 
+                onClose={() => setMenuVisible(false)} 
+                onAddText={() => setModalVisible(true)}  
+                onAddImage={() => setImagePickerMenuVisible(true)}
+                onAddDrawing={openDrawScreen}
+            />
 
+            <ImageSourcePickerModal
+                visible={imagePickerMenuVisible}
+                onClose={() => setImagePickerMenuVisible(false)}
+                onPickCamera={pickImageFromCamera}
+                onPickGallery={pickImageFromLibrary}
+            />
 
-        { /* Modal for adding new note */ }
-        <AddNoteModal 
-            modalVisible={modalVisible} 
-            setModalVisible={setModalVisible}
-            newNote={newNote}
-            setNewNote={setNewNote}
-            addNote={handleAddNote}
-            user={user}
-            selectedTags={selectedTags}
-            setSelectedTags={setSelectedTags}
-            reminderAt={reminderAt}
-            setReminderAt={setReminderAt}
-            drawingSvg={drawingSvg}
-        />   
+            <AddImageNoteModal
+                visible={imageNoteModalVisible}
+                imageUri={imageToAdd}
+                onCancel={() => {
+                    setImageNoteModalVisible(false);
+                    setImageToAdd(null);
+                }}
+                onSave={saveImageNote}
+            />
 
-        <AddNoteMenuModal 
-            visible={menuVisible} 
-            onClose={() => setMenuVisible(false)} 
-            onAddText={() => setModalVisible(true)}  
-            onAddImage={() => {
-                setImagePickerMenuVisible(true); 
-            }}
-            onAddDrawing={openDrawScreen}
-        />
-
-        <ImageSourcePickerModal
-            visible={imagePickerMenuVisible}
-            onClose={() => setImagePickerMenuVisible(false)}
-            onPickCamera={pickImageFromCamera}
-            onPickGallery={pickImageFromLibrary}
-        />
-
-        <AddImageNoteModal
-            visible={imageNoteModalVisible}
-            imageUri={imageToAdd}
-            onCancel={() => {
-                setImageNoteModalVisible(false);
-                setImageToAdd(null);
-            }}
-            onSave={saveImageNote}
-        />
-
-        <AudioRecorder onRecordingComplete={setAudioUri} />
-
-        {audioUri && <AudioPlayer uri={audioUri} />}
-
-
-    </View>);
+            <AudioRecorder onRecordingComplete={setAudioUri} />
+            {audioUri && <AudioPlayer uri={audioUri} />}
+        </View>
+    );
 }
 
 const styles = StyleSheet.create({
@@ -525,6 +428,13 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         padding: 10,
         marginBottom: 15,
+    },
+    input: {
+        height: 40,
+        borderWidth: 1,
+        borderRadius: 8,
+        padding: 10,
+        marginBottom: 12,
     },
     addButton: {
         position: 'absolute',
@@ -540,7 +450,6 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
     errorText: {
-        color: 'red',
         textAlign: 'center',
         marginBottom: 10,
         fontSize: 16,
@@ -548,10 +457,9 @@ const styles = StyleSheet.create({
     noNotesText: {
         textAlign: 'center',
         fontSize: 18,
-        color: '#555',
         marginTop: 15,
         fontWeight: 'bold',
     },
-})
+});
 
 export default NoteScreen;

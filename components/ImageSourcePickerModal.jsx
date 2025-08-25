@@ -1,6 +1,9 @@
-﻿import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+﻿import { useTranslation } from 'react-i18next';
+import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 const ImageSourcePickerModal = ({ visible, onClose, onPickCamera, onPickGallery }) => {
+  const { t } = useTranslation();
+
   return (
     <Modal
       animationType="fade"
@@ -10,7 +13,7 @@ const ImageSourcePickerModal = ({ visible, onClose, onPickCamera, onPickGallery 
     >
       <View style={styles.modalOverlay}>
         <View style={styles.modalContainer}>
-          <Text style={styles.title}>Select image source</Text>
+          <Text style={styles.title}>{t('imageSource')}</Text>
 
           <TouchableOpacity
             style={styles.optionButton}
@@ -19,7 +22,7 @@ const ImageSourcePickerModal = ({ visible, onClose, onPickCamera, onPickGallery 
               onClose();
             }}
           >
-            <Text style={styles.optionText}>Take a photo</Text>
+            <Text style={styles.optionText}>{t('photo')}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -29,14 +32,14 @@ const ImageSourcePickerModal = ({ visible, onClose, onPickCamera, onPickGallery 
               onClose();
             }}
           >
-            <Text style={styles.optionText}>Pick from gallery</Text>
+            <Text style={styles.optionText}>{t('gallery')}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={[styles.optionButton, styles.cancelButton]}
             onPress={onClose}
           >
-            <Text style={[styles.optionText, styles.cancelText]}>Cancel</Text>
+            <Text style={[styles.optionText, styles.cancelText]}>{t('cancelButton')}</Text>
           </TouchableOpacity>
         </View>
       </View>

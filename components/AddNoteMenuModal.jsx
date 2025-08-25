@@ -1,8 +1,10 @@
 ﻿import { useTheme } from '@/contexts/ThemeContext';
+import { useTranslation } from 'react-i18next';
 import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 const AddNoteMenuModal = ({ visible, onClose, onAddText, onAddImage, onAddDrawing }) => {
   const { theme } = useTheme();
+  const { t } = useTranslation();
   
   return (
     <Modal
@@ -12,44 +14,44 @@ const AddNoteMenuModal = ({ visible, onClose, onAddText, onAddImage, onAddDrawin
       onRequestClose={onClose}
     >
       <View style={[styles.modalOverlay, {backgroundColor: 'rgba(0,0,0,0.7)'}]}>
-        <View style={[styles.modalContainer, { backgroundColor: theme.primary}]}>
-          <Text style={styles.title}>What do you want to add?</Text>
+        <View style={[styles.modalContainer, { backgroundColor: theme.modalBackground }]}>
+          <Text style={[styles.title, {color: theme.text}]}>{t('addDialog')}</Text>
 
           <TouchableOpacity
-            style={styles.optionButton}
+            style={[styles.optionButton, {backgroundColor: theme.primary}]}
             onPress={() => {
               onAddText();
               onClose();
             }}
           >
-            <Text style={styles.optionText}>Add text</Text>
+            <Text style={styles.optionText}>{t('addText')}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.optionButton}
+            style={[styles.optionButton, {backgroundColor: theme.primary}]}
             onPress={() => {
               onAddImage();
               onClose();
             }}
           >
-            <Text style={styles.optionText}>Add image</Text>
+            <Text style={styles.optionText}>{t('addImage')}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.optionButton}
+            style={[styles.optionButton, {backgroundColor: theme.primary}]}
             onPress={() => {
               onAddDrawing();
               onClose();
             }}
           >
-            <Text style={styles.optionText}>Add drawing</Text>
+            <Text style={styles.optionText}>{t('addDrawing')}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={[styles.optionButton, styles.cancelButton]}
             onPress={onClose}
           >
-            <Text style={[styles.optionText, styles.cancelText]}>Cancel</Text>
+            <Text style={[styles.optionText, styles.cancelText]}>{t('cancelButton')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -60,13 +62,10 @@ const AddNoteMenuModal = ({ visible, onClose, onAddText, onAddImage, onAddDrawin
 const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   modalContainer: {
-    backgroundColor: '#fff',
-    marginHorizontal: 40,
     paddingVertical: 20,
     paddingHorizontal: 15,
     borderRadius: 8,
@@ -82,7 +81,6 @@ const styles = StyleSheet.create({
     width: '100%',
     paddingVertical: 12,
     borderRadius: 6,
-    backgroundColor: '#007bff',
     marginVertical: 6,
     alignItems: 'center',
   },

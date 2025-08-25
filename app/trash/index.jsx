@@ -1,14 +1,15 @@
-﻿import { useAuth } from '@/contexts/AuthContext'; // Suponiendo que usas un contexto para user
+﻿import { useAuth } from '@/contexts/AuthContext';
 import noteService from '@/services/noteService';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Alert, Button, FlatList, Text, TouchableOpacity, View } from 'react-native';
 
 export default function NotesScreen() {
   const { user } = useAuth();
   const [notes, setNotes] = useState([]);
   const [loading, setLoading] = useState(false);
+  const { t } = useTranslation();
 
-  // Solo trae notas en la papelera
   const fetchTrashNotes = async () => {
     setLoading(true);
     if (!user) {
@@ -18,7 +19,7 @@ export default function NotesScreen() {
     const response = await noteService.getTrashedNotes(user.$id);
 
     if (response.error) {
-      Alert.alert('Error', response.error);
+      Alert.alert(t('error'), response.error);
     } else {
       setNotes(response.data);
     }
@@ -29,16 +30,15 @@ export default function NotesScreen() {
     fetchTrashNotes();
   }, []);
 
-  // Restaurar nota desde la papelera
   const handleRestore = (id) => {
-    Alert.alert('Restore Note', 'Do you want to restore this note?', [
-      { text: 'Cancel', style: 'cancel' },
+    Alert.alert(t('restoreNote'), t('restoreNoteText'), [
+      { text: t('cancelButton'), style: 'cancel' },
       {
-        text: 'Restore',
+        text: t('restoreButton'),
         onPress: async () => {
           const response = await noteService.restoreNote(id);
           if (response.error) {
-            Alert.alert('Error', response.error);
+            Alert.alert(t('error'), response.error);
           } else {
             setNotes(notes.filter((note) => note.$id !== id));
           }
@@ -47,20 +47,19 @@ export default function NotesScreen() {
     ]);
   };
 
-  // Vaciar papelera permanentemente
   const handleEmptyTrash = () => {
     Alert.alert(
-      'Empty Trash',
-      'Are you sure you want to permanently delete all notes in the trash? This action cannot be undone.',
+      t('emptyTrash'),
+      t('emptyTrashConfirm'),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('cancelButton'), style: 'cancel' },
         {
-          text: 'Delete All',
+          text: t('deleteButton'),
           style: 'destructive',
           onPress: async () => {
             const response = await noteService.emptyTrash(user.$id);
             if (response.error) {
-              Alert.alert('Error', response.error);
+              Alert.alert(t('error'), response.error);
             } else {
               setNotes([]);
             }
@@ -72,17 +71,17 @@ export default function NotesScreen() {
 
   const deleteNotePermanently = (id) => {
     Alert.alert(
-      'Delete Note',
-      'Are you sure you want to permanently delete this note? This action cannot be undone.',
+      t('deleteNoteConfirm'),
+      t('deleteNoteText'),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('cancelButton'), style: 'cancel' },
         {
-          text: 'Delete',
+          text: t('deleteButton'),
           style: 'destructive',
           onPress: async () => {
             const response = await noteService.deleteNote(id);
             if (response.error) {
-              Alert.alert('Error', response.error);
+              Alert.alert(t('error'), response.error);
             } else {
               setNotes(notes.filter((note) => note.$id !== id));
             }
@@ -93,8 +92,7 @@ export default function NotesScreen() {
   };
 
   const renderItem = ({ item }) => (
-    <View
-      style={{
+    <View style={{
         padding: 10,
         marginVertical: 5,
         backgroundColor: '#eee',
@@ -104,9 +102,9 @@ export default function NotesScreen() {
       <Text style={{ marginBottom: 8 }}>{item.text}</Text>
 
       <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 10 }}>
-        <Button title="Restore" onPress={() => handleRestore(item.$id)} />
+        <Button title={t('restoreButton')} onPress={() => handleRestore(item.$id)} />
         <Button
-          title="Delete"
+          title={t('deleteButton')}
           color="red"
           onPress={() => deleteNotePermanently(item.$id)}
         />
@@ -126,7 +124,7 @@ export default function NotesScreen() {
         }}
       >
         <Text style={{ color: 'white', textAlign: 'center', fontWeight: 'bold' }}>
-          Empty Trash
+          {t('emptyTrash')}
         </Text>
       </TouchableOpacity>
 
@@ -136,7 +134,7 @@ export default function NotesScreen() {
         renderItem={renderItem}
         ListEmptyComponent={
           <Text style={{ textAlign: 'center', marginTop: 50, color: '#999' }}>
-            Trash is empty
+            {t('emptyTrash')}
           </Text>
         }
         refreshing={loading}

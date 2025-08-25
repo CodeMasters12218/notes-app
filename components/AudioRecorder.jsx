@@ -1,11 +1,13 @@
 ﻿import { Audio } from 'expo-av';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button, PermissionsAndroid, Platform, StyleSheet, Text, View } from 'react-native';
 
 export default function AudioRecorder({ onRecordingComplete }) {
   const [recording, setRecording] = useState(null);
   const [recordedUri, setRecordedUri] = useState(null);
   const [isRecording, setIsRecording] = useState(false);
+  const { t } = useTranslation();
 
   const startRecording = async () => {
     try {
@@ -13,9 +15,8 @@ export default function AudioRecorder({ onRecordingComplete }) {
         const granted = await PermissionsAndroid.request(
           PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
           {
-            title: 'Microphone Permission',
-            message: 'This app needs access to your microphone to record audio.',
-            
+            title: t('microphonePermissionTitle'),
+            message: t('microphonePermissionMessage'),
           }
         );
         if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
@@ -64,10 +65,10 @@ export default function AudioRecorder({ onRecordingComplete }) {
   return (
     <View style={styles.container}>
       <Button
-        title={isRecording ? 'Stop recording' : 'Record audio'}
+        title={isRecording ? t('stopRecording') : t('recordAudio')}
         onPress={isRecording ? stopRecording : startRecording}
       />
-      {recordedUri && <Text style={styles.text}>Recorded audio: {recordedUri}</Text>}
+      {recordedUri && <Text style={styles.text}>{t('recordedAudio')}: {recordedUri}</Text>}
     </View>
   );
 }

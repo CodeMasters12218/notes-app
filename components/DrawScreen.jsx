@@ -2,6 +2,7 @@
 import { Canvas, PaintStyle, Path, Skia, StrokeCap, StrokeJoin } from '@shopify/react-native-skia';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button, StyleSheet, View } from 'react-native';
 
 function pathsToSVG(paths, width = 300, height = 300) {
@@ -24,6 +25,7 @@ export default function DrawScreen() {
   const [currentPath, setCurrentPath] = useState(null);
   const router = useRouter();
   const params = useLocalSearchParams();
+  const { t } = useTranslation();
 
   const handleTouchStart = (event) => {
     const { locationX: x, locationY: y } = event.nativeEvent;
@@ -61,7 +63,6 @@ export default function DrawScreen() {
       });
   };
 
-
   return (
     <View style={styles.container}>
       <View
@@ -95,7 +96,7 @@ export default function DrawScreen() {
         </Canvas>
       </View>
       <View style={styles.buttons}>
-        <Button title="Save drawing" onPress={handleSave} />
+        <Button title={t('drawingSave')} onPress={handleSave} />
       </View>
     </View>
   );

@@ -1,10 +1,12 @@
 ﻿import { Audio } from 'expo-av';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button, StyleSheet, Text, View } from 'react-native';
 
 export default function AudioPlayer({ uri }) {
   const [sound, setSound] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const { t } = useTranslation();
 
   useEffect(() => {
     return sound
@@ -46,10 +48,10 @@ export default function AudioPlayer({ uri }) {
   return (
     <View style={styles.container}>
       <Button
-        title={isPlaying ? 'Pause audio' : 'Play audio'}
+        title={isPlaying ? t('pauseAudio') : t('playAudio')}
         onPress={playPauseAudio}
       />
-      <Text style={styles.text}>Audio ready to play</Text>
+      <Text style={styles.text}>{t('audioReady')}</Text>
     </View>
   );
 }
